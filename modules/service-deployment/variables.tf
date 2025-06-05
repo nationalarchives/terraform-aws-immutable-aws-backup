@@ -68,8 +68,15 @@ variable "member_account_resource_name_prefix" {
 variable "min_retention_days" {
   description = "The minimum number of days to retain backups."
   type        = number
-  default     = 7
 
+  validation {
+    condition     = var.min_retention_days <= var.max_retention_days
+    error_message = "min_retention_days must be less than or equal to max_retention_days."
+  }
+  validation {
+    condition     = anytrue([for k, p in var.plans : p.use_logically_air_gapped_vault]) ? var.min_retention_days >= 7 : true
+    error_message = "min_retention_days must be at least 7 when a plan uses a Logically Air Gapped Vault."
+  }
   validation {
     condition     = alltrue(flatten([for k, p in var.plans : [for r in p["rules"] : r["delete_after_days"] >= var.min_retention_days]]))
     error_message = "No backup rules can have a delete_after_days value less than the minimum retention days."
