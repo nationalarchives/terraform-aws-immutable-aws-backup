@@ -1,5 +1,5 @@
 locals {
-  current_vault_configuration = "${var.min_retention_days}-${var.max_retention_days}"
+  current_vault_configuration = "${coalesce(var.min_retention_days, "0")}-${coalesce(var.max_retention_days, "0")}"
   standard_vaults             = concat([for i in var.retained_vaults : "${i.min_retention_days}-${i.max_retention_days}"], [local.current_vault_configuration])
   lag_vaults                  = concat([for i in var.retained_vaults : "${i.min_retention_days}-${i.max_retention_days}" if i["use_logically_air_gapped_vault"]], local.create_lag_resources ? [local.current_vault_configuration] : [])
 
