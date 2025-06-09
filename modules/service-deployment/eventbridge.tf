@@ -22,8 +22,8 @@ resource "aws_cloudwatch_event_bus_policy" "event_bus" {
           ArnLike : {
             "aws:PrincipalArn" : "arn:*:iam::*:role/${local.member_account_eventbridge_rule_name}",
           },
-          StringEquals : {
-            "aws:PrincipalOrgID" : local.organization_id
+          "ForAnyValue:StringLike" : {
+            "aws:PrincipalOrgPaths" : local.deployment_ou_paths_including_children
           }
         }
       }
