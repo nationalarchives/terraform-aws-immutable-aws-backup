@@ -1,0 +1,65 @@
+site_name: Immutable AWS Backup Terraform module
+site_description: Terraform module for Immutable AWS Backup
+site_author: Kurtis Mash
+site_url: https://nationalarchives.github.io/terraform-aws-immutable-aws-backup/
+repo_name: nationalarchives/terraform-aws-immutable-aws-back
+repo_url: https://github.com/nationalarchives/terraform-aws-immutable-aws-backup
+edit_uri: edit/main/docs/
+use_directory_urls: true
+theme:
+  name: material
+  logo: assets/images/cert-logo.svg
+  palette:
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle:
+        icon: material/weather-night
+        name: Switch to system preference
+    - scheme: default
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to dark mode
+  features:
+    - navigation.instant
+    - navigation.instant.progress
+    - navigation.tracking
+    - pymdownx.snippets
+    - navigation.footer
+    - toc.integrate
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.tabs.link
+    - content.code.annotation
+    - content.code.copy
+  language: en
+
+extra:
+  status:
+    new: Recently added
+    deprecated: Deprecated
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/nationalarchives/terraform-aws-immutable-aws-backup
+    # - icon: fontawesome/brands/twitter
+    #   link: https://twitter.com/paulschwarzen
+
+nav:
+  - Home: index.md
+  - Getting started: getting-started.md 
+  - Automation: automation.md
+  - CA Certificate locations: locations.md
+  - Client certificates: client-certificates.md
+  - Configuration options: options.md
+  - Development: development.md
+  - FAQs: faq.md
+  - Revocation: revocation.md
+  - Security: security.md
+  - How-to guides:
+    - API Gateway: how-to-guides/api.md 
+    - Application load balancer: how-to-guides/alb.md
+    - IAM Roles Anywhere: how-to-guides/iam.md
+  - Terraform reference: reference.md
+
+plugins:
+  - social
