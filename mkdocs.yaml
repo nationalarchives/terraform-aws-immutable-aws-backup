@@ -2,7 +2,7 @@ site_name: Immutable AWS Backup Terraform module
 site_description: Terraform module for Immutable AWS Backup
 site_author: The National Archives
 site_url: https://nationalarchives.github.io/terraform-aws-immutable-aws-backup/
-repo_name: nationalarchives/terraform-aws-immutable-aws-back
+repo_name: nationalarchives/terraform-aws-immutable-aws-backup
 repo_url: https://github.com/nationalarchives/terraform-aws-immutable-aws-backup
 edit_uri: edit/main/docs/
 use_directory_urls: true
