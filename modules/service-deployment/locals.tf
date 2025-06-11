@@ -1,6 +1,7 @@
 locals {
-  delete_after_days_tag = "DeleteAfterDays"
-  organization_id       = data.aws_organizations_organization.current.id
+  central_retention_days_tag = "_BackupCentralRetentionDays"
+  local_retention_days_tag   = "_BackupLocalRetentionDays"
+  organization_id            = data.aws_organizations_organization.current.id
 
   central_account_resource_name_prefix = "${var.central_account_resource_name_prefix}${var.service_name}"
 

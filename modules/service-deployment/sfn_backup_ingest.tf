@@ -128,22 +128,60 @@ resource "aws_sfn_state_machine" "backup_ingest" {
         "Arguments" : {
           "ResourceArn" : "{% $states.input.detail.destinationRecoveryPointArn %}"
         },
-        "Output" : "{% $merge([$states.input, { \"${local.delete_after_days_tag}\": $number($states.result.Tags.${local.delete_after_days_tag}) }]) %}"
-        "Next" : "StartCopyJob"
+        "Output" : trimspace(<<END
+          {% $merge([
+            $states.input,
+            { 
+              "${local.central_retention_days_tag}": $number($states.result.Tags.${local.central_retention_days_tag}),
+              "${local.local_retention_days_tag}": $number($states.result.Tags.${local.local_retention_days_tag})
+            }
+          ]) %}
+        END
+        )
+        "Next" : "StartCopyToStandardVault"
       },
-      "StartCopyJob" : {
+      "StartCopyToStandardVault" : {
         "Type" : "Task",
+        "Resource" : "arn:aws:states:::aws-sdk:backup:startCopyJob",
         "Arguments" : {
           "DestinationBackupVaultArn" : local.current_standard_vault.arn,
           "IamRoleArn" : var.central_backup_service_role_arn,
           "RecoveryPointArn" : "{% $states.input.detail.destinationRecoveryPointArn %}",
           "SourceBackupVaultName" : "{% $match($states.input.detail.destinationBackupVaultArn, /backup-vault:([^:]*)/).groups[0] %}",
           "Lifecycle" : {
-            "DeleteAfterDays" : "{% $states.input.${local.delete_after_days_tag} %}"
+            "DeleteAfterDays" : "{% $exists($states.input.${local.central_retention_days_tag}) ? $states.input.${local.central_retention_days_tag} : -1 %}"
           },
         },
-        "Resource" : "arn:aws:states:::aws-sdk:backup:startCopyJob",
+        "Output" : "{% $states.input %}",
+        "Next" : "ValueFor${local.local_retention_days_tag}?"
+      },
+      "ValueFor${local.local_retention_days_tag}?" : {
+        "Type" : "Choice",
+        "Choices" : [
+          {
+            "Condition" : "{% $exists($states.input.${local.local_retention_days_tag}) %}"
+            "Next" : "ChangeLifecycleOfSourceRecoveryPoint"
+          }
+        ],
+        "Default" : "EndState"
+      }
+      "ChangeLifecycleOfSourceRecoveryPoint" : {
+        "Type" : "Task",
+        "Resource" : "arn:aws:states:::aws-sdk:backup:updateRecoveryPointLifecycle",
+        "Credentials" : {
+          "RoleArn" : "{% $join([$substring($states.input.detail.iamRoleArn, 0, $indexOf($arn, \"role/\")+5), \"${local.member_account_backup_service_role_name}\"]) %}"
+        },
+        "Arguments" : {
+          "BackupVaultName" : "{% $match($states.input.detail.sourceBackupVaultArn, /backup-vault:([^:]*)/).groups[0] %}",
+          "RecoveryPointArn" : "{% $states.input.detail.sourceBackupVaultArn %}",
+          "Lifecycle" : {
+            "DeleteAfterDays" : "{% $states.input.${local.local_retention_days_tag} %}"
+          }
+        },
         "End" : true
+      },
+      "EndState" : {
+        "Type" : "Succeed"
       }
     },
   })

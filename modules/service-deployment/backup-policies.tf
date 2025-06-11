@@ -39,7 +39,7 @@ locals {
     # If using a Logically Air Gapped Vault, we need separate plans for the resource selections
     local.create_lag_resources ? { for k, v in var.plans : "${k}-to-lag" => merge(v, { lag_plan : true, continuous_plan : false, tag_value : k }) if v["use_logically_air_gapped_vault"] } : {},
     # If creating continuous backups, we need separate plans for the continuous backups - different lifecycle and they need to exist before the rules that snapshot from them.
-    { for k, v in var.plans : "${k}-continuous-backups" => merge(v, { lag_plan : false, continuous_plan : true, tag_value : k, rules : [{ name : "${k}-continuous-backups", schedule_expression : v["continuous_backup_schedule_expression"], delete_after_days : 35 }] }) if v["create_continuous_backups"] || v["snapshot_from_continuous_backups"] },
+    { for k, v in var.plans : "${k}-continuous-backups" => merge(v, { lag_plan : false, continuous_plan : true, tag_value : k, rules : [{ name : "${k}-continuous-backups", schedule_expression : v["continuous_backup_schedule_expression"], central_retention_days : 35 }] }) if v["create_continuous_backups"] || v["snapshot_from_continuous_backups"] },
   )
 
   policy_content = jsonencode({
@@ -51,26 +51,20 @@ locals {
         "enable_continuous_backup" : { "@@assign" : plan["continuous_plan"] },
         "start_backup_window_minutes" : { "@@assign" : 60 },
         "lifecycle" : {
-          "delete_after_days" : { "@@assign" : rule["delete_after_days"] },
+          "delete_after_days" : { "@@assign" : rule["central_retention_days"] },
         },
         "copy_actions" : plan["continuous_plan"] ? {} : {
           "${plan["lag_plan"] ? local.current_lag_vault.arn : aws_backup_vault.intermediate.arn}" : {
             "target_backup_vault_arn" : { "@@assign" : plan["lag_plan"] ? local.current_lag_vault.arn : aws_backup_vault.intermediate.arn }
             "lifecycle" : {
-              "delete_after_days" : { "@@assign" : plan["lag_plan"] ? rule["delete_after_days"] : 3 }
+              "delete_after_days" : { "@@assign" : plan["lag_plan"] ? rule["central_retention_days"] : 3 }
             }
           }
         },
-        "recovery_point_tags" : (plan["lag_plan"] || plan["continuous_plan"]) ? {} : {
-          "${local.delete_after_days_tag}" : {
-            "tag_key" : {
-              "@@assign" : local.delete_after_days_tag
-            },
-            "tag_value" : {
-              "@@assign" : rule["delete_after_days"]
-            }
-          }
-        }
+        "recovery_point_tags" : (plan["lag_plan"] || plan["continuous_plan"]) ? {} : merge(
+          rule["central_retention_days"] != null ? {} : { "${local.central_retention_days_tag}" : { "tag_key" : { "@@assign" : local.central_retention_days_tag }, "tag_value" : { "@@assign" : rule["central_retention_days"] } } },
+          rule["local_retention_days"] != null ? {} : { "${local.local_retention_days_tag}" : { "tag_key" : { "@@assign" : local.local_retention_days_tag }, "tag_value" : { "@@assign" : rule["local_retention_days"] } } }
+        )
       } },
       "selections" : {
         "resources" : {
@@ -110,13 +104,4 @@ resource "aws_organizations_policy_attachment" "backup_policy" {
 
   policy_id = aws_organizations_policy.backup_policy.id
   target_id = each.key
-}
-
-
-
-
-
-resource "local_file" "backup_policy" {
-  content  = local.policy_content
-  filename = "${path.module}/${local.central_account_resource_name_prefix}.json"
 }
