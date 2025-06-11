@@ -1,14 +1,14 @@
 locals {
-  backup_copier_sfn_name = "${local.central_account_resource_name_prefix}-backup-copier"
+  backup_ingest_sfn_name = "${local.central_account_resource_name_prefix}-backup-ingest"
 }
 
 #
 # Step Function to copy backups between vaults
 #
-module "backup_copier_sfn_role" {
+module "backup_ingest_sfn_role" {
   source = "../iam-role"
 
-  name = local.backup_copier_sfn_name
+  name = "${local.backup_ingest_sfn_name}-sfn"
   assume_role_policy = jsonencode({
     Version : "2012-10-17"
     Statement : [
@@ -103,20 +103,20 @@ module "backup_copier_sfn_role" {
   })
 }
 
-resource "aws_cloudwatch_log_group" "backup_copier" {
-  name              = "/aws/vendedlogs/states/${local.backup_copier_sfn_name}"
+resource "aws_cloudwatch_log_group" "backup_ingest" {
+  name              = "/aws/vendedlogs/states/${local.backup_ingest_sfn_name}"
   retention_in_days = 90
 }
 
-resource "aws_sfn_state_machine" "backup_copier" {
-  name     = local.backup_copier_sfn_name
-  role_arn = module.backup_copier_sfn_role.role.arn
+resource "aws_sfn_state_machine" "backup_ingest" {
+  name     = local.backup_ingest_sfn_name
+  role_arn = module.backup_ingest_sfn_role.role.arn
   type     = "EXPRESS"
 
   logging_configuration {
     level                  = "ALL"
     include_execution_data = true
-    log_destination        = "${aws_cloudwatch_log_group.backup_copier.arn}:*"
+    log_destination        = "${aws_cloudwatch_log_group.backup_ingest.arn}:*"
   }
 
   definition = jsonencode({
@@ -153,10 +153,10 @@ resource "aws_sfn_state_machine" "backup_copier" {
 #
 # EventBridge Rule to trigger the Step Function
 #
-module "backup_copier_eventbridge_role" {
+module "backup_ingest_eventbridge_role" {
   source = "../iam-role"
 
-  name = "${local.backup_copier_sfn_name}-eventbridge"
+  name = "${local.backup_ingest_sfn_name}-eventbridge"
   assume_role_policy = jsonencode({
     Version : "2012-10-17"
     Statement : [
@@ -180,16 +180,16 @@ module "backup_copier_eventbridge_role" {
       {
         Effect : "Allow",
         Action : "states:StartExecution",
-        Resource : aws_sfn_state_machine.backup_copier.arn
+        Resource : aws_sfn_state_machine.backup_ingest.arn
       }
     ]
   })
 }
 
-resource "aws_cloudwatch_event_rule" "backup_copier" {
-  name           = local.backup_copier_sfn_name
+resource "aws_cloudwatch_event_rule" "backup_ingest" {
+  name           = local.backup_ingest_sfn_name
   event_bus_name = aws_cloudwatch_event_bus.event_bus.name
-  description    = "Triggers the ${aws_sfn_state_machine.backup_copier.name} Step Function on backup copy job to/from specific vaults."
+  description    = "Triggers the ${aws_sfn_state_machine.backup_ingest.name} Step Function on backup copy job to/from specific vaults."
 
   event_pattern = jsonencode({
     "source" : ["aws.backup"],
@@ -204,9 +204,9 @@ resource "aws_cloudwatch_event_rule" "backup_copier" {
   })
 }
 
-resource "aws_cloudwatch_event_target" "backup_copier" {
-  arn            = aws_sfn_state_machine.backup_copier.arn
-  event_bus_name = aws_cloudwatch_event_rule.backup_copier.event_bus_name
-  role_arn       = module.backup_copier_eventbridge_role.role.arn
-  rule           = aws_cloudwatch_event_rule.backup_copier.name
+resource "aws_cloudwatch_event_target" "backup_ingest" {
+  arn            = aws_sfn_state_machine.backup_ingest.arn
+  event_bus_name = aws_cloudwatch_event_rule.backup_ingest.event_bus_name
+  role_arn       = module.backup_ingest_eventbridge_role.role.arn
+  rule           = aws_cloudwatch_event_rule.backup_ingest.name
 }
