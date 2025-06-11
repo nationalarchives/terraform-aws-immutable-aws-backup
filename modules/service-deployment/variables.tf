@@ -91,9 +91,10 @@ variable "min_retention_days" {
 variable "plans" {
   description = "A list of rules to be created for the backup plan."
   type = map(object({
-    require_plan_name_resource_tag        = optional(bool, true),
-    use_continuous_backups                = optional(bool, true),                  # Use continuous backups for resources that support it. These backups do not copy but act as a source for the backup jobs created by the rules.
     continuous_backup_schedule_expression = optional(string, "cron(0 0 ? * * *)"), # Schedule for creating continuous backups, if enabled.
+    create_continuous_backups             = optional(bool, false),                 # Create continuous backups for resources that support it to enable local PITR, there is no copy action for these backups.
+    require_plan_name_resource_tag        = optional(bool, true),
+    snapshot_from_continuous_backups      = optional(bool, true), # Generate continuous backups for resources that support it and then snapshot from them. These backups do not copy but act as a source for the backup jobs created by the rules. Currently only S3 is supported.
     use_logically_air_gapped_vault        = optional(bool, false),
     rules = list(object({
       delete_after_days   = optional(number),
