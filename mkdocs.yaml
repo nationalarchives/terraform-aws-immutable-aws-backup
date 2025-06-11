@@ -1,0 +1,49 @@
+site_name: Immutable AWS Backup Terraform module
+site_description: Terraform module for Immutable AWS Backup
+site_author: The National Archives
+site_url: https://nationalarchives.github.io/terraform-aws-immutable-aws-backup/
+repo_name: nationalarchives/terraform-aws-immutable-aws-backup
+repo_url: https://github.com/nationalarchives/terraform-aws-immutable-aws-backup
+edit_uri: edit/main/docs/
+use_directory_urls: true
+theme:
+  name: material
+  logo: assets/images/tna.png
+  palette:
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle:
+        icon: material/weather-night
+        name: Switch to system preference
+    - scheme: default
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to dark mode
+  features:
+    - navigation.instant
+    - navigation.instant.progress
+    - navigation.tracking
+    - pymdownx.snippets
+    - navigation.footer
+    - toc.integrate
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.tabs.link
+    - content.code.annotation
+    - content.code.copy
+  language: en
+
+extra:
+  status:
+    new: Recently added
+    deprecated: Deprecated
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/nationalarchives/terraform-aws-immutable-aws-backup
+
+nav:
+  - Home: index.md
+
+plugins:
+  - social
