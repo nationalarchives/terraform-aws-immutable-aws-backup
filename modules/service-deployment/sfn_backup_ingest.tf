@@ -56,7 +56,6 @@ module "backup_ingest_sfn_role" {
           "ec2:DescribeTags",
           "elasticfilesystem:DescribeTags",
           "fsx:ListTagsForResource",
-          "fsx:ListTagsForResource",
           "rds:ListTagsForResource",
           "redshift-serverless:ListTagsForResource",
           "redshift:DescribeTags",
