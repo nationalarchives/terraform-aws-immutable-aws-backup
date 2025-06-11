@@ -20,7 +20,8 @@ locals {
     "arn:aws:ssm-sap:*:*:HANA/*",     # SAP HANA
   ]
   resource_types_with_continuous_backup_support = [
-    "arn:aws:s3:::*", # S3
+    "arn:aws:rds:*:*:db:*", # RDS Database Instance
+    "arn:aws:s3:::*",       # S3
   ]
 
   plans = merge(
