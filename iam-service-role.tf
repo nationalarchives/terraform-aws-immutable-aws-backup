@@ -23,56 +23,8 @@ module "backup_service_role" {
       }
     ]
   })
-  inline_policy = jsonencode({
-    Version : "2012-10-17"
-    Statement : [
-      {
-        Sid : "BackupVaultPermissions",
-        Effect : "Allow",
-        Action : [
-          "backup:DescribeBackupVault",
-          "backup:CopyIntoBackupVault"
-        ],
-        Resource : "arn:aws:backup:*:*:backup-vault:*"
-      },
-      {
-        Sid : "BackupVaultCopyPermissions",
-        Effect : "Allow",
-        Action : [
-          "backup:CopyFromBackupVault"
-        ],
-        Resource : "*"
-      },
-      {
-        Sid : "RecoveryPointTaggingPermissions",
-        Effect : "Allow",
-        Action : [
-          "backup:TagResource"
-        ],
-        Resource : "arn:aws:backup:*:*:recovery-point:*",
-        Condition : {
-          StringEquals : {
-            "aws:PrincipalAccount" : "$${aws:ResourceAccount}"
-          }
-        }
-      },
-      {
-        Sid : "KMSPermissions",
-        Effect : "Allow",
-        Action : "kms:DescribeKey",
-        Resource : "*"
-      },
-      {
-        Sid : "KMSCreateGrantPermissions",
-        Effect : "Allow",
-        Action : "kms:CreateGrant",
-        Resource : "*",
-        Condition : {
-          Bool : {
-            "kms:GrantIsForAWSResource" : "true"
-          }
-        }
-      }
-    ]
-  })
+  policy_arns = [
+    "arn:aws:iam::aws:policy/service-role/AWSBackupServiceRolePolicyForBackup",
+    "arn:aws:iam::aws:policy/AWSBackupServiceRolePolicyForS3Backup"
+  ]
 }

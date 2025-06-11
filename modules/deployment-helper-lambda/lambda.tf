@@ -6,6 +6,7 @@ resource "aws_cloudwatch_log_group" "lambda" {
 data "archive_file" "lambda_code" {
   type        = "zip"
   source_dir  = "${path.module}/src"
+  excludes    = ["${path.module}/lambda.zip"]
   output_path = "${path.module}/lambda.zip"
 }
 

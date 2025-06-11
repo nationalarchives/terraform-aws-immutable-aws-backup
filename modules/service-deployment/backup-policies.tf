@@ -19,17 +19,27 @@ locals {
     "arn:aws:redshift:*:*:cluster:*", # Redshift
     "arn:aws:ssm-sap:*:*:HANA/*",     # SAP HANA
   ]
-  resource_types_with_continuous_backup_support = [
+  resource_types_that_snapshot_from_continuous_backups = [
+    # These resources support continuous backups and use these as a source for periodic backups.
     "arn:aws:s3:::*", # S3
   ]
+  resource_types_with_continuous_backup_support = concat(
+    local.resource_types_that_snapshot_from_continuous_backups,
+    [
+      # These resources support continuous backups, but only for PITR recovery within the source account.
+      "arn:aws:rds:*:*:db:*",       # RDS Database Instance
+      "arn:aws:ssm-sap:*:*:HANA/*", # SAP HANA
+      # Aurora is not included as it can't be targetted by ARN
+    ]
+  )
 
   plans = merge(
     # Pass through the plans as defined by the caller
     { for k, v in var.plans : "${k}-to-standard" => merge(v, { lag_plan : false, continuous_plan : false, tag_value : k }) },
     # If using a Logically Air Gapped Vault, we need separate plans for the resource selections
     local.create_lag_resources ? { for k, v in var.plans : "${k}-to-lag" => merge(v, { lag_plan : true, continuous_plan : false, tag_value : k }) if v["use_logically_air_gapped_vault"] } : {},
-    # For resources that support continuous backup we want to create a continuous recovery point which the caller defined plans can then create snapshots from
-    { for k, v in var.plans : "${k}-continuous-backups" => merge(v, { lag_plan : false, continuous_plan : true, tag_value : k, rules : [{ name : "${k}-continuous-backups", schedule_expression : "cron(0 0 ? * * *)", delete_after_days : 35 }] }) },
+    # If creating continuous backups, we need separate plans for the continuous backups - different lifecycle and they need to exist before the rules that snapshot from them.
+    { for k, v in var.plans : "${k}-continuous-backups" => merge(v, { lag_plan : false, continuous_plan : true, tag_value : k, rules : [{ name : "${k}-continuous-backups", schedule_expression : v["continuous_backup_schedule_expression"], delete_after_days : 35 }] }) if v["create_continuous_backups"] || v["snapshot_from_continuous_backups"] },
   )
 
   policy_content = jsonencode({
@@ -66,7 +76,12 @@ locals {
         "resources" : {
           "${plan["require_plan_name_resource_tag"] ? "supported-resources-with-tag" : "all-supported-resources"}" : {
             "iam_role_arn" : { "@@assign" : "arn:aws:iam::$account:role/${local.member_account_backup_service_role_name}" },
-            "resource_types" : { "@@assign" : plan["continuous_plan"] ? local.resource_types_with_continuous_backup_support : (plan["use_logically_air_gapped_vault"] ? (plan["lag_plan"] ? local.resource_types_with_lag_support : local.resource_types_without_lag_support) : ["*"]) },
+            "resource_types" : { "@@assign" : toset(concat(
+              plan["continuous_plan"] && plan["create_continuous_backups"] ? local.resource_types_with_continuous_backup_support : [],
+              plan["continuous_plan"] && plan["snapshot_from_continuous_backups"] ? local.resource_types_that_snapshot_from_continuous_backups : [],
+              plan["use_logically_air_gapped_vault"] && !plan["continuous_plan"] ? (plan["lag_plan"] ? local.resource_types_with_lag_support : local.resource_types_without_lag_support) : [],
+              !plan["continuous_plan"] && !plan["use_logically_air_gapped_vault"] ? ["*"] : [], # If not using LAG or continuous backups, select all resources
+            )) },
             "conditions" : !plan["require_plan_name_resource_tag"] ? {} : {
               "string_equals" : {
                 "require_resource_tag" : {
@@ -95,4 +110,13 @@ resource "aws_organizations_policy_attachment" "backup_policy" {
 
   policy_id = aws_organizations_policy.backup_policy.id
   target_id = each.key
+}
+
+
+
+
+
+resource "local_file" "backup_policy" {
+  content  = local.policy_content
+  filename = "${path.module}/${local.central_account_resource_name_prefix}.json"
 }
