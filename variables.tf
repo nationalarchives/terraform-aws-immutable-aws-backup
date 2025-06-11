@@ -9,8 +9,10 @@ variable "deployments" {
     max_retention_days = number,
     min_retention_days = number,
     plans = map(object({
-      require_plan_name_resource_tag = optional(bool, true),
-      use_logically_air_gapped_vault = optional(bool, false),
+      require_plan_name_resource_tag        = optional(bool, true),
+      use_continuous_backups                = optional(bool, true),                  # Use continuous backups for resources that support it. These backups do not copy but act as a source for the backup jobs created by the rules.
+      continuous_backup_schedule_expression = optional(string, "cron(0 0 ? * * *)"), # Schedule for creating continuous backups, if enabled.
+      use_logically_air_gapped_vault        = optional(bool, false),
       rules = list(object({
         schedule_expression = string,
         name                = string,
