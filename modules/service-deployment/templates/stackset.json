@@ -4,6 +4,10 @@
 		"BackupServiceRoleName": {
 			"Type": "String"
 		},
+		"BackupServiceRolePrincipals": {
+			"Type": "List<String>",
+			"Description": "List of principals that can assume the Backup Service Role in addition to the AWS Backup service."
+		},
 		"BackupServiceLinkedRoleArn": {
 			"Type": "String"
 		},
@@ -63,12 +67,36 @@
 									"aws:SourceAccount": { "Ref": "AWS::AccountId" }
 								}
 							}
+						},
+						{
+							"Effect": "Allow",
+							"Principal": {
+								"AWS": { "Ref": "BackupServiceRolePrincipals" }
+							},
+							"Action": ["sts:AssumeRole"]
 						}
 					]
 				},
 				"ManagedPolicyArns": [
 					"arn:aws:iam::aws:policy/service-role/AWSBackupServiceRolePolicyForBackup",
 					"arn:aws:iam::aws:policy/AWSBackupServiceRolePolicyForS3Backup"
+				],
+				"Policies": [
+					{
+						"PolicyName": {
+							"Ref": "BackupServiceRoleName"
+						},
+						"PolicyDocument": {
+							"Version": "2012-10-17",
+							"Statement": [
+								{
+									"Effect": "Allow",
+									"Action": "backup:UpdateRecoveryPointLifecycle",
+									"Resource": "*"
+								}
+							]
+						}
+					}
 				]
 			}
 		},

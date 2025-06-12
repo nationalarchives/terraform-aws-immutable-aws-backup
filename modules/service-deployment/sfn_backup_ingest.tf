@@ -20,7 +20,7 @@ module "backup_ingest_sfn_role" {
         Action : "sts:AssumeRole",
         Condition : {
           StringEquals : {
-            "aws:SourceAccount" : data.aws_caller_identity.current.account_id
+            "aws:SourceAccount" : local.account_id
           }
         }
       }
@@ -73,6 +73,7 @@ module "backup_ingest_sfn_role" {
         "Effect" : "Allow",
         "Action" : [
           "backup:DescribeCopyJob",
+          "backup:DescribeRecoveryPoint",
           "backup:StartCopyJob",
           "backup:ListTags"
         ],
@@ -97,6 +98,19 @@ module "backup_ingest_sfn_role" {
           "iam:PassRole"
         ],
         "Resource" : var.central_backup_service_role_arn
+      },
+      {
+        Sid : "AllowAssumeRoleForMemberAccounts",
+        Effect : "Allow",
+        Action : [
+          "sts:AssumeRole"
+        ],
+        Resource : "arn:aws:iam::*:role/${local.member_account_backup_service_role_name}",
+        Condition : {
+          "ForAnyValue:StringLike" : {
+            "aws:ResourceOrgPaths" : local.deployment_ou_paths_including_children
+          }
+        }
       }
     ]
   })
@@ -120,65 +134,139 @@ resource "aws_sfn_state_machine" "backup_ingest" {
 
   definition = jsonencode({
     "QueryLanguage" : "JSONata"
-    "StartAt" : "GetRecoveryPointTags",
+    "StartAt" : "SetVars",
     "States" : {
-      "GetRecoveryPointTags" : {
-        "Type" : "Task",
-        "Resource" : "arn:aws:states:::aws-sdk:backup:listTags",
-        "Arguments" : {
-          "ResourceArn" : "{% $states.input.detail.destinationRecoveryPointArn %}"
+      "SetVars" : {
+        "Type" : "Pass",
+        "Output" : "{% $states.input %}",
+        "Assign" : {
+          "accountId" : local.account_id,
+          "centralBackupServiceRoleArn" : var.central_backup_service_role_arn,
+          "destinationBackupVaultArn" : "{% $states.input.detail.destinationBackupVaultArn %}",
+          "destinationRecoveryPointArn" : "{% $states.input.detail.destinationRecoveryPointArn %}",
+          "intermediateBackupVaultArn" : aws_backup_vault.intermediate.arn,
+          "jobStatus" : "{% $states.input.detail.state %}",
+          "lagBackupVaultNamePrefix" : local.lag_vault_prefix,
+          "memberAccountBackupServiceRoleName" : local.member_account_backup_service_role_name,
+          "partitionId" : local.partition_id,
+          "retentionTags" : {
+            "member" : local.local_retention_days_tag,
+            "intermediate" : local.intermediate_retention_days_tag,
+          },
+          "sourceAccountNumber" : "{% $states.input.account %}",
+          "sourceBackupVaultArn" : "{% $states.input.detail.sourceBackupVaultArn %}",
+          "sourceRecoveryPointArn" : "{% $states.input.resources[0] %}",
+          "standardBackupVaultArn" : local.current_standard_vault.arn,
+          "standardBackupVaultNamePrefix" : local.standard_vault_prefix,
         },
-        "Output" : trimspace(<<END
-          {% $merge([
-            $states.input,
-            { 
-              "${local.central_retention_days_tag}": $number($states.result.Tags.${local.central_retention_days_tag}),
-              "${local.local_retention_days_tag}": $number($states.result.Tags.${local.local_retention_days_tag})
-            }
-          ]) %}
-        END
-        )
-        "Next" : "StartCopyToStandardVault"
+        "Next" : "CalculateVars"
+      },
+      "CalculateVars" : {
+        "Type" : "Pass",
+        "Output" : "{% $states.input %}",
+        "Assign" : {
+          "destinationBackupVaultName" : "{% $match($destinationBackupVaultArn, /backup-vault:([^:]*)/).groups[0] %}",
+          "sourceAccountBackupServiceRoleArn" : "{% 'arn:' & $partitionId & ':iam::' & $sourceAccountNumber & ':role/' & $memberAccountBackupServiceRoleName %}",
+          "sourceBackupVaultName" : "{% $match($sourceBackupVaultArn, /backup-vault:([^:]*)/).groups[0] %}",
+        },
+        "Next" : "EventType?"
+      },
+      "EventType?" : {
+        "Type" : "Choice",
+        "Choices" : [
+          {
+            "Comment" : "Successful Member -> Intermediate",
+            "Condition" : "{% $jobStatus = 'COMPLETED' and $sourceAccountNumber != $accountId and $destinationBackupVaultArn = $intermediateBackupVaultArn %}",
+            "Assign" : {
+              "sourceBackupVaultType" : "member",
+            },
+            "Next" : "StartCopyToStandardVault"
+          },
+          {
+            "Comment" : "Successful Intermediate -> Standard",
+            "Condition" : "{% $jobStatus = 'COMPLETED' and $sourceBackupVaultArn = $intermediateBackupVaultArn and $substring($destinationBackupVaultName, 0, $length($standardBackupVaultNamePrefix)) = $standardBackupVaultNamePrefix %}",
+            "Assign" : {
+              "sourceBackupVaultType" : "intermediate",
+            },
+            "Next" : "DescribeDestinationRecoveryPoint"
+          },
+          {
+            "Comment" : "Successful Member -> LAG",
+            "Condition" : "{% $jobStatus = 'COMPLETED' and $sourceAccountNumber != $accountId and $substring($destinationBackupVaultArn, 0, $length($lagBackupVaultNamePrefix)) = $lagBackupVaultNamePrefix %}",
+            "Assign" : {
+              "sourceBackupVaultType" : "member",
+            },
+            "Next" : "DescribeDestinationRecoveryPoint"
+          }
+        ]
+        "Default" : "EndState",
       },
       "StartCopyToStandardVault" : {
         "Type" : "Task",
         "Resource" : "arn:aws:states:::aws-sdk:backup:startCopyJob",
         "Arguments" : {
-          "DestinationBackupVaultArn" : local.current_standard_vault.arn,
-          "IamRoleArn" : var.central_backup_service_role_arn,
-          "RecoveryPointArn" : "{% $states.input.detail.destinationRecoveryPointArn %}",
-          "SourceBackupVaultName" : "{% $match($states.input.detail.destinationBackupVaultArn, /backup-vault:([^:]*)/).groups[0] %}",
-          "Lifecycle" : {
-            "DeleteAfterDays" : "{% $exists($states.input.${local.central_retention_days_tag}) ? $states.input.${local.central_retention_days_tag} : -1 %}"
-          },
+          "DestinationBackupVaultArn" : "{% $standardBackupVaultArn %}",
+          "IamRoleArn" : "{% $centralBackupServiceRoleArn %}",
+          "RecoveryPointArn" : "{% $destinationRecoveryPointArn %}",
+          "SourceBackupVaultName" : "{% $destinationBackupVaultName %}",
         },
         "Output" : "{% $states.input %}",
-        "Next" : "ValueFor${local.local_retention_days_tag}?"
+        "Next" : "DescribeDestinationRecoveryPoint"
       },
-      "ValueFor${local.local_retention_days_tag}?" : {
+      "DescribeDestinationRecoveryPoint" : {
+        "Type" : "Task",
+        "Resource" : "arn:aws:states:::aws-sdk:backup:describeRecoveryPoint",
+        "Arguments" : {
+          "BackupVaultName" : "{% $destinationBackupVaultName %}",
+          "RecoveryPointArn" : "{% $destinationRecoveryPointArn %}"
+        },
+        "Output" : "{% $states.input %}",
+        "Assign" : {
+          "destinationRecoveryPointDeleteAfterDays" : "{% $exists($states.result.Lifecycle.DeleteAfterDays) ? $states.result.Lifecycle.DeleteAfterDays : '-1' %}",
+        },
+        "Next" : "GetDestinationRecoveryPointTags"
+      },
+      "GetDestinationRecoveryPointTags" : {
+        "Type" : "Task",
+        "Resource" : "arn:aws:states:::aws-sdk:backup:listTags",
+        "Arguments" : {
+          "ResourceArn" : "{% $destinationRecoveryPointArn %}"
+        },
+        "Output" : "{% $states.input %}",
+        "Assign" : {
+          "configuredDeleteAfterDays" : "{% $lookup($states.result.Tags, $lookup($retentionTags, $sourceBackupVaultType)) %}"
+        },
+        "Next" : "SourceRecoveryPointLifecycleNeedsUpdating?"
+      },
+      "SourceRecoveryPointLifecycleNeedsUpdating?" : {
         "Type" : "Choice",
         "Choices" : [
           {
-            "Condition" : "{% $exists($states.input.${local.local_retention_days_tag}) %}"
-            "Next" : "ChangeLifecycleOfSourceRecoveryPoint"
+            "Comment" : "",
+            "Condition" : "{% $sourceBackupVaultType = 'member' and $configuredDeleteAfterDays != $destinationRecoveryPointDeleteAfterDays and $configuredDeleteAfterDays != '-1' %}",
+            "Next" : "UpdateSourceRecoveryPointLifecycle"
+          },
+          {
+            "Comment" : "",
+            "Condition" : "{% $sourceBackupVaultType = 'intermediate' and $configuredDeleteAfterDays != $destinationRecoveryPointDeleteAfterDays and $configuredDeleteAfterDays != '-1' %}",
+            "Next" : "UpdateSourceRecoveryPointLifecycle"
           }
         ],
         "Default" : "EndState"
-      }
-      "ChangeLifecycleOfSourceRecoveryPoint" : {
+      },
+      "UpdateSourceRecoveryPointLifecycle" : {
         "Type" : "Task",
         "Resource" : "arn:aws:states:::aws-sdk:backup:updateRecoveryPointLifecycle",
-        "Credentials" : {
-          "RoleArn" : "{% $join([$substring($states.input.detail.iamRoleArn, 0, $indexOf($arn, \"role/\")+5), \"${local.member_account_backup_service_role_name}\"]) %}"
-        },
+        "Credentials" : { "RoleArn" : "{% $sourceBackupVaultType = 'member' ? $sourceAccountBackupServiceRoleArn : $centralBackupServiceRoleArn %}" }
         "Arguments" : {
-          "BackupVaultName" : "{% $match($states.input.detail.sourceBackupVaultArn, /backup-vault:([^:]*)/).groups[0] %}",
-          "RecoveryPointArn" : "{% $states.input.detail.sourceBackupVaultArn %}",
+          "BackupVaultName" : "{% $sourceBackupVaultName %}",
+          "RecoveryPointArn" : "{% $sourceRecoveryPointArn %}",
           "Lifecycle" : {
-            "DeleteAfterDays" : "{% $states.input.${local.local_retention_days_tag} %}"
+            "DeleteAfterDays" : "{% $number($configuredDeleteAfterDays) %}"
           }
         },
-        "End" : true
+        "Output" : "{% $states.input %}",
+        "Next" : "EndState"
       },
       "EndState" : {
         "Type" : "Succeed"
@@ -205,7 +293,7 @@ module "backup_ingest_eventbridge_role" {
         Action : "sts:AssumeRole",
         Condition : {
           StringEquals : {
-            "aws:SourceAccount" : data.aws_caller_identity.current.account_id
+            "aws:SourceAccount" : local.account_id
           }
         }
       }
@@ -234,9 +322,23 @@ resource "aws_cloudwatch_event_rule" "backup_ingest" {
     "detail" : {
       "state" : ["COMPLETED"],
       "$or" : [
-        { "sourceBackupVaultArn" : ["arn:aws:backup:us-east-1:123456789012:backup-vault:846869de-4589-45c3-ab60-4fbbabcdd3e"] },
-        { "destinationBackupVaultArn" : [aws_backup_vault.intermediate.arn] }
+        {
+          # Member -> Intermediate
+          "sourceBackupVaultArn" : [{ "wildcard" : "arn:*:backup:*:*:backup-vault:${local.member_account_backup_vault_name}" }],
+          "destinationBackupVaultArn" : [aws_backup_vault.intermediate.arn]
+        },
+        {
+          # Intermediate -> Standard
+          "sourceBackupVaultArn" : [aws_backup_vault.intermediate.arn],
+          "destinationBackupVaultArn" : values(aws_backup_vault.standard)[*].arn
+        },
+        {
+          # Member -> LAG
+          "sourceBackupVaultArn" : [{ "wildcard" : "arn:*:backup:*:*:backup-vault:${local.member_account_backup_vault_name}" }],
+          "destinationBackupVaultArn" : concat([1], values(aws_backup_logically_air_gapped_vault.lag)[*].arn)
+        }
       ]
+
     }
   })
 }

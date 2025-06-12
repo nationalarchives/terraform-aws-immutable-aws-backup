@@ -50,8 +50,8 @@ variable "max_retention_days" {
   default     = null
 
   validation {
-    condition     = var.max_retention_days != null ? alltrue(flatten([for k, p in var.plans : [for r in p["rules"] : r["central_retention_days"] <= var.max_retention_days]])) : true
-    error_message = "If provided, no backup rules can have a central_retention_days value greater than the maximum retention days."
+    condition     = var.max_retention_days != null ? alltrue(flatten([for k, p in var.plans : [for r in p["rules"] : r["delete_after_days"] <= var.max_retention_days]])) : true
+    error_message = "If provided, no backup rules can have a delete_after_days value greater than the maximum retention days."
   }
   validation {
     condition     = anytrue([for k, p in var.plans : p.use_logically_air_gapped_vault]) ? try(var.max_retention_days > 0, false) : true
@@ -83,8 +83,8 @@ variable "min_retention_days" {
     error_message = "min_retention_days must be at least 7 when a plan uses a Logically Air Gapped Vault."
   }
   validation {
-    condition     = var.min_retention_days != null ? alltrue(flatten([for k, p in var.plans : [for r in p["rules"] : r["central_retention_days"] >= var.min_retention_days]])) : true
-    error_message = "If provided, no backup rules can have a central_retention_days value less than the minimum retention days."
+    condition     = var.min_retention_days != null ? alltrue(flatten([for k, p in var.plans : [for r in p["rules"] : r["delete_after_days"] >= var.min_retention_days]])) : true
+    error_message = "If provided, no backup rules can have a delete_after_days value less than the minimum retention days."
   }
 }
 
@@ -97,10 +97,11 @@ variable "plans" {
     snapshot_from_continuous_backups      = optional(bool, true), # Generate continuous backups for resources that support it and then snapshot from them. These backups do not copy but act as a source for the backup jobs created by the rules. Currently only S3 is supported.
     use_logically_air_gapped_vault        = optional(bool, false),
     rules = list(object({
-      name                   = optional(string),
-      schedule_expression    = string,
-      local_retention_days   = optional(number) # Number of days to retain backups in the member account vault. If not specified, defaults to central_retention_days.
-      central_retention_days = optional(number) # Number of days to retain backups in the central vault.
+      name                        = optional(string),
+      schedule_expression         = string,
+      local_retention_days        = optional(number) # Number of days to retain backups in the member account vault. If not specified, defaults to delete_after_days.
+      intermediate_retention_days = optional(number) # Number of days to retain backups in the intermediate vault.
+      delete_after_days           = optional(number) # Number of days to retain backups in the central vault.
     }))
   }))
   default = {}

@@ -15,10 +15,11 @@ variable "deployments" {
       snapshot_from_continuous_backups      = optional(bool, true), # Generate continuous backups for resources that support it and then snapshot from them. These backups do not copy but act as a source for the backup jobs created by the rules. Currently only S3 is supported.
       use_logically_air_gapped_vault        = optional(bool, false),
       rules = list(object({
-        name                   = optional(string),
-        schedule_expression    = string,
-        local_retention_days   = optional(number)       # Number of days to retain backups in the member account vault. If not specified, defaults to central_retention_days.
-        central_retention_days = optional(number, null) # Number of days to retain backups in the central vault.
+        name                        = optional(string),
+        schedule_expression         = string,
+        local_retention_days        = optional(number)       # Number of days to retain backups in the member account vault. If not specified, defaults to delete_after_days.
+        intermediate_retention_days = optional(number)       # Number of days to retain backups in the intermediate vault.
+        delete_after_days           = optional(number, null) # Number of days to retain backups in the central vault.
       }))
     })),
     restores_enabled = bool,
