@@ -75,6 +75,7 @@ module "backup_ingest_sfn_role" {
           "backup:DescribeCopyJob",
           "backup:DescribeRecoveryPoint",
           "backup:StartCopyJob",
+          "backup:UpdateRecoveryPointLifecycle",
           "backup:ListTags"
         ],
         "Resource" : "*"
@@ -244,20 +245,33 @@ resource "aws_sfn_state_machine" "backup_ingest" {
           {
             "Comment" : "",
             "Condition" : "{% $sourceBackupVaultType = 'member' and $configuredDeleteAfterDays != $destinationRecoveryPointDeleteAfterDays and $configuredDeleteAfterDays != '-1' %}",
-            "Next" : "UpdateSourceRecoveryPointLifecycle"
+            "Next" : "UpdateSourceRecoveryPointLifecycleMemberAccount"
           },
           {
             "Comment" : "",
             "Condition" : "{% $sourceBackupVaultType = 'intermediate' and $configuredDeleteAfterDays != $destinationRecoveryPointDeleteAfterDays and $configuredDeleteAfterDays != '-1' %}",
-            "Next" : "UpdateSourceRecoveryPointLifecycle"
+            "Next" : "UpdateSourceRecoveryPointLifecycleCentralAccount"
           }
         ],
         "Default" : "EndState"
       },
-      "UpdateSourceRecoveryPointLifecycle" : {
+      "UpdateSourceRecoveryPointLifecycleMemberAccount" : {
         "Type" : "Task",
         "Resource" : "arn:aws:states:::aws-sdk:backup:updateRecoveryPointLifecycle",
         "Credentials" : { "RoleArn" : "{% $sourceBackupVaultType = 'member' ? $sourceAccountBackupServiceRoleArn : $centralBackupServiceRoleArn %}" }
+        "Arguments" : {
+          "BackupVaultName" : "{% $sourceBackupVaultName %}",
+          "RecoveryPointArn" : "{% $sourceRecoveryPointArn %}",
+          "Lifecycle" : {
+            "DeleteAfterDays" : "{% $number($configuredDeleteAfterDays) %}"
+          }
+        },
+        "Output" : "{% $states.input %}",
+        "Next" : "EndState"
+      },
+      "UpdateSourceRecoveryPointLifecycleCentralAccount" : {
+        "Type" : "Task",
+        "Resource" : "arn:aws:states:::aws-sdk:backup:updateRecoveryPointLifecycle",
         "Arguments" : {
           "BackupVaultName" : "{% $sourceBackupVaultName %}",
           "RecoveryPointArn" : "{% $sourceRecoveryPointArn %}",
