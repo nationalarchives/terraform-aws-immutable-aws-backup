@@ -91,7 +91,7 @@ module "default_to_event_bus_role" {
       Action = "sts:AssumeRole",
       Condition = {
         StringEquals = {
-          "aws:SourceAccount" : data.aws_caller_identity.current.account_id
+          "aws:SourceAccount" : local.account_id
         }
       }
     }]

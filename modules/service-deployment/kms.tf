@@ -8,7 +8,7 @@ resource "aws_kms_key" "key" {
         Sid : "DelegateToIamForOwnerAccount",
         Effect : "Allow",
         Principal : {
-          AWS : "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+          AWS : "arn:aws:iam::${local.account_id}:root"
         },
         Action : "kms:*",
         Resource : "*"
