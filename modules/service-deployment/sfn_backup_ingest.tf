@@ -138,7 +138,7 @@ resource "aws_sfn_state_machine" "backup_ingest" {
     "States" : {
       "SetVars" : {
         "Type" : "Pass",
-        "Output" : "{% $states.input %}",
+        "Output" : "", # Don't output anything to reduce CloudWatch Logs ingest
         "Assign" : {
           "accountId" : local.account_id,
           "centralBackupServiceRoleArn" : var.central_backup_service_role_arn,
