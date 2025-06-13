@@ -51,7 +51,7 @@ variable "max_retention_days" {
 
   validation {
     condition     = var.max_retention_days != null ? alltrue(flatten([for k, p in var.plans : [for r in p["rules"] : r["delete_after_days"] <= var.max_retention_days]])) : true
-    error_message = "If provided, no backup rules can have a delete_after_days value greater than the maximum retention days."
+    error_message = "delete_after_days must be set to a value less than the max_retention_days."
   }
   validation {
     condition     = anytrue([for k, p in var.plans : p.use_logically_air_gapped_vault]) ? try(var.max_retention_days > 0, false) : true
@@ -83,7 +83,7 @@ variable "min_retention_days" {
     error_message = "min_retention_days must be at least 7 when a plan uses a Logically Air Gapped Vault."
   }
   validation {
-    condition     = var.min_retention_days != null ? alltrue(flatten([for k, p in var.plans : [for r in p["rules"] : r["delete_after_days"] >= var.min_retention_days]])) : true
+    condition     = var.min_retention_days != null ? alltrue(flatten([for k, p in var.plans : [for r in p["rules"] : (r["delete_after_days"] == null || r["delete_after_days"] >= var.min_retention_days)]])) : true
     error_message = "If provided, no backup rules can have a delete_after_days value less than the minimum retention days."
   }
 }

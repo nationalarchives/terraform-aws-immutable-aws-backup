@@ -6,8 +6,8 @@ variable "central_account_resource_name_prefix" {
 variable "deployments" {
   type = map(object({
     backup_tag_key     = optional(string),
-    max_retention_days = number,
-    min_retention_days = number,
+    max_retention_days = optional(number),
+    min_retention_days = optional(number),
     plans = map(object({
       continuous_backup_schedule_expression = optional(string, "cron(0 0 ? * * *)"), # Schedule for creating continuous backups, if enabled.
       create_continuous_backups             = optional(bool, false),                 # Create continuous backups for resources that support it to enable local PITR, there is no copy action for these backups.
