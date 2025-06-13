@@ -198,8 +198,8 @@ resource "aws_sfn_state_machine" "backup_ingest" {
             },
             "Next" : "GetDestinationRecoveryPointTags"
           }
-        ]
-        "Default" : "EndState",
+        ],
+        "Default" : "Succeed",
       },
       "StartCopyToStandardVault" : {
         "Type" : "Task",
@@ -239,12 +239,12 @@ resource "aws_sfn_state_machine" "backup_ingest" {
             "Next" : "UpdateSourceRecoveryPointLifecycleCentralAccount"
           }
         ],
-        "Default" : "EndState"
+        "Default" : "Succeed"
       },
       "UpdateSourceRecoveryPointLifecycleMemberAccount" : {
         "Type" : "Task",
         "Resource" : "arn:aws:states:::aws-sdk:backup:updateRecoveryPointLifecycle",
-        "Credentials" : { "RoleArn" : "{% $sourceBackupVaultType = 'member' ? $sourceAccountBackupServiceRoleArn : $centralBackupServiceRoleArn %}" }
+        "Credentials" : { "RoleArn" : "{% $sourceBackupVaultType = 'member' ? $sourceAccountBackupServiceRoleArn : $centralBackupServiceRoleArn %}" },
         "Arguments" : {
           "BackupVaultName" : "{% $sourceBackupVaultName %}",
           "RecoveryPointArn" : "{% $sourceRecoveryPointArn %}",
@@ -253,7 +253,7 @@ resource "aws_sfn_state_machine" "backup_ingest" {
           }
         },
         "Output" : "{% $states.input %}",
-        "Next" : "EndState"
+        "Next" : "Succeed"
       },
       "UpdateSourceRecoveryPointLifecycleCentralAccount" : {
         "Type" : "Task",
@@ -266,9 +266,9 @@ resource "aws_sfn_state_machine" "backup_ingest" {
           }
         },
         "Output" : "{% $states.input %}",
-        "Next" : "EndState"
+        "Next" : "Succeed"
       },
-      "EndState" : {
+      "Succeed" : {
         "Type" : "Succeed"
       }
     },
