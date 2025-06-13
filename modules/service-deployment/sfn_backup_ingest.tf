@@ -73,7 +73,6 @@ module "backup_ingest_sfn_role" {
         "Effect" : "Allow",
         "Action" : [
           "backup:DescribeCopyJob",
-          "backup:DescribeRecoveryPoint",
           "backup:StartCopyJob",
           "backup:UpdateRecoveryPointLifecycle",
           "backup:ListTags"
@@ -101,7 +100,7 @@ module "backup_ingest_sfn_role" {
         "Resource" : var.central_backup_service_role_arn
       },
       {
-        Sid : "AllowAssumeRoleForMemberAccounts",
+        Sid : "AllowAssumeRoleInMemberAccounts",
         Effect : "Allow",
         Action : [
           "sts:AssumeRole"
@@ -189,7 +188,7 @@ resource "aws_sfn_state_machine" "backup_ingest" {
             "Assign" : {
               "sourceBackupVaultType" : "intermediate",
             },
-            "Next" : "DescribeDestinationRecoveryPoint"
+            "Next" : "GetDestinationRecoveryPointTags"
           },
           {
             "Comment" : "Successful Member -> LAG",
@@ -197,7 +196,7 @@ resource "aws_sfn_state_machine" "backup_ingest" {
             "Assign" : {
               "sourceBackupVaultType" : "member",
             },
-            "Next" : "DescribeDestinationRecoveryPoint"
+            "Next" : "GetDestinationRecoveryPointTags"
           }
         ]
         "Default" : "EndState",
@@ -212,19 +211,6 @@ resource "aws_sfn_state_machine" "backup_ingest" {
           "SourceBackupVaultName" : "{% $destinationBackupVaultName %}",
         },
         "Output" : "{% $states.input %}",
-        "Next" : "DescribeDestinationRecoveryPoint"
-      },
-      "DescribeDestinationRecoveryPoint" : {
-        "Type" : "Task",
-        "Resource" : "arn:aws:states:::aws-sdk:backup:describeRecoveryPoint",
-        "Arguments" : {
-          "BackupVaultName" : "{% $destinationBackupVaultName %}",
-          "RecoveryPointArn" : "{% $destinationRecoveryPointArn %}"
-        },
-        "Output" : "{% $states.input %}",
-        "Assign" : {
-          "destinationRecoveryPointDeleteAfterDays" : "{% $exists($states.result.Lifecycle.DeleteAfterDays) ? $states.result.Lifecycle.DeleteAfterDays : '-1' %}",
-        },
         "Next" : "GetDestinationRecoveryPointTags"
       },
       "GetDestinationRecoveryPointTags" : {
@@ -237,19 +223,19 @@ resource "aws_sfn_state_machine" "backup_ingest" {
         "Assign" : {
           "configuredDeleteAfterDays" : "{% $lookup($states.result.Tags, $lookup($retentionTags, $sourceBackupVaultType)) %}"
         },
-        "Next" : "SourceRecoveryPointLifecycleNeedsUpdating?"
+        "Next" : "UpdateSourceRecoveryPointLifecycle"
       },
-      "SourceRecoveryPointLifecycleNeedsUpdating?" : {
+      "UpdateSourceRecoveryPointLifecycle" : {
         "Type" : "Choice",
         "Choices" : [
           {
             "Comment" : "",
-            "Condition" : "{% $sourceBackupVaultType = 'member' and $configuredDeleteAfterDays != $destinationRecoveryPointDeleteAfterDays and $configuredDeleteAfterDays != '-1' %}",
+            "Condition" : "{% $sourceBackupVaultType = 'member' %}",
             "Next" : "UpdateSourceRecoveryPointLifecycleMemberAccount"
           },
           {
             "Comment" : "",
-            "Condition" : "{% $sourceBackupVaultType = 'intermediate' and $configuredDeleteAfterDays != $destinationRecoveryPointDeleteAfterDays and $configuredDeleteAfterDays != '-1' %}",
+            "Condition" : "{% $sourceBackupVaultType = 'intermediate' %}",
             "Next" : "UpdateSourceRecoveryPointLifecycleCentralAccount"
           }
         ],

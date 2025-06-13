@@ -59,7 +59,6 @@ locals {
           }
         },
         "recovery_point_tags" : (plan["lag_plan"] || plan["continuous_plan"]) ? {} : {
-          "${local.delete_after_days_tag}" : { "tag_key" : { "@@assign" : local.delete_after_days_tag }, "tag_value" : { "@@assign" : coalesce(rule["delete_after_days"], -1) } },
           "${local.local_retention_days_tag}" : { "tag_key" : { "@@assign" : local.local_retention_days_tag }, "tag_value" : { "@@assign" : coalesce(rule["local_retention_days"], rule["delete_after_days"], -1) } },
           "${local.intermediate_retention_days_tag}" : { "tag_key" : { "@@assign" : local.intermediate_retention_days_tag }, "tag_value" : { "@@assign" : coalesce(rule["intermediate_retention_days"], 7) } },
         }

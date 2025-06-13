@@ -1,5 +1,4 @@
 locals {
-  delete_after_days_tag           = "BackupDeleteAfterDays"
   local_retention_days_tag        = "BackupLocalRetentionDays"
   intermediate_retention_days_tag = "BackupIntermediateRetentionDays"
   account_id                      = data.aws_caller_identity.current.account_id
