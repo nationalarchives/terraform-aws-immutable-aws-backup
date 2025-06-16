@@ -98,6 +98,12 @@
                   "Effect": "Allow",
                   "Action": "backup:UpdateRecoveryPointLifecycle",
                   "Resource": "*"
+                },
+                {
+                  "Sid": "AllowStartBackupCopyJob",
+                  "Effect": "Allow",
+                  "Action": ["backup:DescribeCopyJob", "backup:StartCopyJob", "backup:ListTags"],
+                  "Resource": "*"
                 }
               ]
             }
