@@ -30,6 +30,10 @@ resource "aws_lambda_function" "lambda" {
   ephemeral_storage {
     size = 1024
   }
+
+  lifecycle {
+    ignore_changes = ["filename"]
+  }
 }
 
 resource "aws_lambda_permission" "lambda" {
