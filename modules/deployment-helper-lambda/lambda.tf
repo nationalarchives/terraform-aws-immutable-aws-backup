@@ -4,10 +4,11 @@ resource "aws_cloudwatch_log_group" "lambda" {
 }
 
 data "archive_file" "lambda_code" {
-  type        = "zip"
-  source_dir  = "${path.module}/src"
-  excludes    = ["${path.module}/lambda.zip"]
-  output_path = "${path.module}/lambda.zip"
+  type             = "zip"
+  source_dir       = "${path.module}/src"
+  excludes         = ["${path.module}/lambda.zip"]
+  output_path      = "${path.module}/lambda.zip"
+  output_file_mode = "0644"
 }
 
 resource "aws_lambda_function" "lambda" {
