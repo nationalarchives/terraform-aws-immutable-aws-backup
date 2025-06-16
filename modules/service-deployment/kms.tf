@@ -82,7 +82,7 @@ resource "aws_kms_key" "key" {
           },
           "ForAnyValue:StringLike" : {
             "aws:PrincipalOrgPaths" : local.deployment_ou_paths_including_children,
-            "kms:ViaService" : "backup.*.amazonaws.com"
+            "kms:ViaService" : "*.amazonaws.com"
           }
         }
       }
