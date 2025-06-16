@@ -1,209 +1,242 @@
 {
-	"AWSTemplateFormatVersion": "2010-09-09",
-	"Parameters": {
-		"BackupServiceRoleName": {
-			"Type": "String"
-		},
-		"BackupServiceLinkedRoleArn": {
-			"Type": "String"
-		},
-		"BackupVaultName": {
-			"Type": "String"
-		},
-		"CentralEventBusArn": {
-			"Type": "String"
-		},
-		"EventBridgeRuleName": {
-			"Type": "String"
-		},
-		"KmsKeyArn": {
-			"Type": "String"
-		},
-		"DeploymentHelperTopicArn": {
-			"Type": "String",
-			"Description": "ARN of the central SNS topic used to trigger the deployment helper Lambda function."
-		},
-		"DeploymentHelperRoleArn": {
-			"Type": "String",
-			"Description": "ARN of the central deployment helper Lambda function role, used in the trust policy of the member account Deployment Helper role."
-		},
-		"DeploymentHelperRoleName": {
-			"Type": "String",
-			"Description": "Name of the role to create to be assumed in the member account by the deployment helper Lambda function."
-		},
-		"RestoreVaultName": {
-			"Type": "String"
-		},
-		"OrganizationId": {
-			"Type": "String",
-			"Description": "The ID of the AWS Organization to which this account belongs."
-		},
-		"ForceDeployment": {
-			"Type": "String"
-		}
-	},
-	"Resources": {
-		"BackupServiceRole": {
-			"Type": "AWS::IAM::Role",
-			"Properties": {
-				"RoleName": {
-					"Ref": "BackupServiceRoleName"
-				},
-				"AssumeRolePolicyDocument": {
-					"Version": "2012-10-17",
-					"Statement": [
-						{
-							"Effect": "Allow",
-							"Principal": {
-								"Service": ["backup.amazonaws.com"]
-							},
-							"Action": ["sts:AssumeRole"],
-							"Condition": {
-								"StringEquals": {
-									"aws:SourceAccount": { "Ref": "AWS::AccountId" }
-								}
-							}
-						}
-					]
-				},
-				"ManagedPolicyArns": [
-					"arn:aws:iam::aws:policy/service-role/AWSBackupServiceRolePolicyForBackup",
-					"arn:aws:iam::aws:policy/AWSBackupServiceRolePolicyForS3Backup"
-				]
-			}
-		},
-		"BackupServiceLinkedRole": {
-			"Type": "Custom::AWS__IAM__ServiceLinkedRole",
-			"Properties": {
-				"ServiceToken": { "Ref": "DeploymentHelperTopicArn" },
-				"ServiceTimeout": 120,
-				"RoleArn": { "Fn::GetAtt": ["DeploymentHelperRole", "Arn"] },
-				"AWSServiceName": "backup.amazonaws.com"
-			}
-		},
-		"BackupVault": {
-			"Type": "Custom::TerraformDeployment",
-			"Properties": {
-				"ServiceToken": { "Ref": "DeploymentHelperTopicArn" },
-				"ServiceTimeout": 900,
-				"RoleArn": { "Fn::GetAtt": ["DeploymentHelperRole", "Arn"] },
-				"Code": "./terraform-stacks/AWS::Backup::BackupVault.tf",
-				"TFVARS": {
-					"BackupVaultName": {
-						"Ref": "BackupVaultName"
-					},
-					"ForceDestroy": true,
-					"EncryptionKeyArn": { "Ref": "KmsKeyArn" }
-				}
-			}
-		},
-		"DeploymentHelperRole": {
-			"Type": "AWS::IAM::Role",
-			"Properties": {
-				"RoleName": {
-					"Ref": "DeploymentHelperRoleName"
-				},
-				"AssumeRolePolicyDocument": {
-					"Version": "2012-10-17",
-					"Statement": [
-						{
-							"Effect": "Allow",
-							"Principal": {
-								"AWS": { "Ref": "DeploymentHelperRoleArn" }
-							},
-							"Action": ["sts:AssumeRole"],
-							"Condition": {
-								"StringEquals": {
-									"aws:PrincipalOrgID": { "Ref": "OrganizationId" }
-								}
-							}
-						}
-					]
-				},
-				"ManagedPolicyArns": ["arn:aws:iam::aws:policy/AdministratorAccess"]
-			}
-		},
-		"EventBridgeRole": {
-			"Type": "AWS::IAM::Role",
-			"Properties": {
-				"RoleName": {
-					"Ref": "EventBridgeRuleName"
-				},
-				"AssumeRolePolicyDocument": {
-					"Version": "2012-10-17",
-					"Statement": [
-						{
-							"Effect": "Allow",
-							"Principal": {
-								"Service": ["events.amazonaws.com"]
-							},
-							"Action": ["sts:AssumeRole"],
-							"Condition": {
-								"StringEquals": {
-									"aws:SourceAccount": { "Ref": "AWS::AccountId" }
-								}
-							}
-						}
-					]
-				},
-				"Policies": [
-					{
-						"PolicyName": {
-							"Ref": "EventBridgeRuleName"
-						},
-						"PolicyDocument": {
-							"Version": "2012-10-17",
-							"Statement": [
-								{
-									"Effect": "Allow",
-									"Action": ["events:PutEvents"],
-									"Resource": { "Ref": "CentralEventBusArn" }
-								}
-							]
-						}
-					}
-				]
-			}
-		},
-		"EventBridgeRule": {
-			"Type": "AWS::Events::Rule",
-			"Properties": {
-				"Name": {
-					"Fn::Sub": "${EventBridgeRuleName}"
-				},
-				"EventPattern": {
-					"source": ["aws.backup"],
-					"detail-type": ["Backup Job State Change", "Copy Job State Change", "Restore Job State Change"]
-				},
-				"Targets": [
-					{
-						"Arn": { "Ref": "CentralEventBusArn" },
-						"Id": "SendToCentralBackupEventBus",
-						"RoleArn": { "Fn::GetAtt": ["EventBridgeRole", "Arn"] }
-					}
-				]
-			}
-		},
-		"RestoreVault": {
-			"Type": "Custom::TerraformDeployment",
-			"Properties": {
-				"ServiceToken": { "Ref": "DeploymentHelperTopicArn" },
-				"ServiceTimeout": 900,
-				"RoleArn": { "Fn::GetAtt": ["DeploymentHelperRole", "Arn"] },
-				"Code": "./terraform-stacks/AWS::Backup::BackupVault.tf",
-				"TFVARS": {
-					"BackupVaultName": {
-						"Ref": "RestoreVaultName"
-					},
-					"ForceDestroy": true
-				}
-			}
-		}
-	},
-	"Outputs": {
-		"CentralAccountBackupServiceLinkedRoleArn": {
-			"Description": "ARN of the Backup Service-Linked Role in the central account.",
-			"Value": { "Ref": "BackupServiceLinkedRoleArn" }
-		}
-	}
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Parameters": {
+    "BackupServiceRoleName": {
+      "Type": "String"
+    },
+    "BackupServiceRolePrincipals": {
+      "Type": "List<String>",
+      "Description": "List of principals that can assume the Backup Service Role in addition to the AWS Backup service."
+    },
+    "BackupServiceLinkedRoleArn": {
+      "Type": "String"
+    },
+    "BackupVaultName": {
+      "Type": "String"
+    },
+    "CentralEventBusArn": {
+      "Type": "String"
+    },
+    "EventBridgeRuleName": {
+      "Type": "String"
+    },
+    "KmsKeyArn": {
+      "Type": "String"
+    },
+    "DeploymentHelperTopicArn": {
+      "Type": "String",
+      "Description": "ARN of the central SNS topic used to trigger the deployment helper Lambda function."
+    },
+    "DeploymentHelperRoleArn": {
+      "Type": "String",
+      "Description": "ARN of the central deployment helper Lambda function role, used in the trust policy of the member account Deployment Helper role."
+    },
+    "DeploymentHelperRoleName": {
+      "Type": "String",
+      "Description": "Name of the role to create to be assumed in the member account by the deployment helper Lambda function."
+    },
+    "RestoreVaultName": {
+      "Type": "String"
+    },
+    "OrganizationId": {
+      "Type": "String",
+      "Description": "The ID of the AWS Organization to which this account belongs."
+    },
+    "ForceDeployment": {
+      "Type": "String"
+    }
+  },
+  "Resources": {
+    "BackupServiceRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "RoleName": {
+          "Ref": "BackupServiceRoleName"
+        },
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": ["backup.amazonaws.com"]
+              },
+              "Action": ["sts:AssumeRole"],
+              "Condition": {
+                "StringEquals": {
+                  "aws:SourceAccount": { "Ref": "AWS::AccountId" }
+                }
+              }
+            },
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": { "Ref": "BackupServiceRolePrincipals" }
+              },
+              "Action": ["sts:AssumeRole"],
+              "Condition": {
+                "StringEquals": {
+                  "aws:PrincipalOrgID": { "Ref": "OrganizationId" }
+                }
+              }
+            }
+          ]
+        },
+        "ManagedPolicyArns": [
+          "arn:aws:iam::aws:policy/service-role/AWSBackupServiceRolePolicyForBackup",
+          "arn:aws:iam::aws:policy/AWSBackupServiceRolePolicyForS3Backup"
+        ],
+        "Policies": [
+          {
+            "PolicyName": {
+              "Ref": "BackupServiceRoleName"
+            },
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": "backup:UpdateRecoveryPointLifecycle",
+                  "Resource": "*"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "BackupServiceLinkedRole": {
+      "Type": "Custom::AWS__IAM__ServiceLinkedRole",
+      "Properties": {
+        "ServiceToken": { "Ref": "DeploymentHelperTopicArn" },
+        "ServiceTimeout": 120,
+        "RoleArn": { "Fn::GetAtt": ["DeploymentHelperRole", "Arn"] },
+        "AWSServiceName": "backup.amazonaws.com"
+      }
+    },
+    "BackupVault": {
+      "Type": "Custom::TerraformDeployment",
+      "Properties": {
+        "ServiceToken": { "Ref": "DeploymentHelperTopicArn" },
+        "ServiceTimeout": 900,
+        "RoleArn": { "Fn::GetAtt": ["DeploymentHelperRole", "Arn"] },
+        "Code": "./terraform-stacks/AWS::Backup::BackupVault.tf",
+        "TFVARS": {
+          "BackupVaultName": {
+            "Ref": "BackupVaultName"
+          },
+          "ForceDestroy": true,
+          "EncryptionKeyArn": { "Ref": "KmsKeyArn" }
+        }
+      }
+    },
+    "DeploymentHelperRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "RoleName": {
+          "Ref": "DeploymentHelperRoleName"
+        },
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": { "Ref": "DeploymentHelperRoleArn" }
+              },
+              "Action": ["sts:AssumeRole"],
+              "Condition": {
+                "StringEquals": {
+                  "aws:PrincipalOrgID": { "Ref": "OrganizationId" }
+                }
+              }
+            }
+          ]
+        },
+        "ManagedPolicyArns": ["arn:aws:iam::aws:policy/AdministratorAccess"]
+      }
+    },
+    "EventBridgeRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "RoleName": {
+          "Ref": "EventBridgeRuleName"
+        },
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": ["events.amazonaws.com"]
+              },
+              "Action": ["sts:AssumeRole"],
+              "Condition": {
+                "StringEquals": {
+                  "aws:SourceAccount": { "Ref": "AWS::AccountId" }
+                }
+              }
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": {
+              "Ref": "EventBridgeRuleName"
+            },
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": ["events:PutEvents"],
+                  "Resource": { "Ref": "CentralEventBusArn" }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "EventBridgeRule": {
+      "Type": "AWS::Events::Rule",
+      "Properties": {
+        "Name": {
+          "Fn::Sub": "${EventBridgeRuleName}"
+        },
+        "EventPattern": {
+          "source": ["aws.backup"],
+          "detail-type": ["Backup Job State Change", "Copy Job State Change", "Restore Job State Change"]
+        },
+        "Targets": [
+          {
+            "Arn": { "Ref": "CentralEventBusArn" },
+            "Id": "SendToCentralBackupEventBus",
+            "RoleArn": { "Fn::GetAtt": ["EventBridgeRole", "Arn"] }
+          }
+        ]
+      }
+    },
+    "RestoreVault": {
+      "Type": "Custom::TerraformDeployment",
+      "Properties": {
+        "ServiceToken": { "Ref": "DeploymentHelperTopicArn" },
+        "ServiceTimeout": 900,
+        "RoleArn": { "Fn::GetAtt": ["DeploymentHelperRole", "Arn"] },
+        "Code": "./terraform-stacks/AWS::Backup::BackupVault.tf",
+        "TFVARS": {
+          "BackupVaultName": {
+            "Ref": "RestoreVaultName"
+          },
+          "ForceDestroy": true
+        }
+      }
+    }
+  },
+  "Outputs": {
+    "CentralAccountBackupServiceLinkedRoleArn": {
+      "Description": "ARN of the Backup Service-Linked Role in the central account.",
+      "Value": { "Ref": "BackupServiceLinkedRoleArn" }
+    }
+  }
 }

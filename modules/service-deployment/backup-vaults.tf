@@ -1,5 +1,8 @@
 locals {
-  current_vault_configuration = "${coalesce(var.min_retention_days, "0")}-${coalesce(var.max_retention_days, "0")}"
+  standard_vault_prefix = "${local.central_account_resource_name_prefix}-standard-"
+  lag_vault_prefix      = "${local.central_account_resource_name_prefix}-lag-"
+
+  current_vault_configuration = join("-", [coalesce(var.min_retention_days, "0"), coalesce(var.max_retention_days, "0")])
   standard_vaults             = concat([for i in var.retained_vaults : "${i.min_retention_days}-${i.max_retention_days}"], [local.current_vault_configuration])
   lag_vaults                  = concat([for i in var.retained_vaults : "${i.min_retention_days}-${i.max_retention_days}" if i["use_logically_air_gapped_vault"]], local.create_lag_resources ? [local.current_vault_configuration] : [])
 
@@ -45,7 +48,7 @@ resource "aws_backup_vault_policy" "intermediate" {
 #
 resource "aws_backup_logically_air_gapped_vault" "lag" {
   for_each           = toset(local.lag_vaults)
-  name               = "${local.central_account_resource_name_prefix}-lag-${each.key}"
+  name               = join("", [local.lag_vault_prefix, each.key])
   min_retention_days = split("-", each.key)[0]
   max_retention_days = split("-", each.key)[1]
 }
@@ -61,7 +64,7 @@ resource "aws_backup_vault_policy" "lag" {
 #
 resource "aws_backup_vault" "standard" {
   for_each      = toset(local.standard_vaults)
-  name          = "${local.central_account_resource_name_prefix}-standard-${each.key}"
+  name          = join("", [local.standard_vault_prefix, each.key])
   kms_key_arn   = null # Uses AWS Managed Key
   force_destroy = true
 }

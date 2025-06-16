@@ -51,7 +51,7 @@ variable "max_retention_days" {
 
   validation {
     condition     = var.max_retention_days != null ? alltrue(flatten([for k, p in var.plans : [for r in p["rules"] : r["delete_after_days"] <= var.max_retention_days]])) : true
-    error_message = "If provided, no backup rules can have a delete_after_days value greater than the maximum retention days."
+    error_message = "delete_after_days must be set to a value less than the max_retention_days."
   }
   validation {
     condition     = anytrue([for k, p in var.plans : p.use_logically_air_gapped_vault]) ? try(var.max_retention_days > 0, false) : true
@@ -83,7 +83,7 @@ variable "min_retention_days" {
     error_message = "min_retention_days must be at least 7 when a plan uses a Logically Air Gapped Vault."
   }
   validation {
-    condition     = var.min_retention_days != null ? alltrue(flatten([for k, p in var.plans : [for r in p["rules"] : r["delete_after_days"] >= var.min_retention_days]])) : true
+    condition     = var.min_retention_days != null ? alltrue(flatten([for k, p in var.plans : [for r in p["rules"] : (r["delete_after_days"] == null || r["delete_after_days"] >= var.min_retention_days)]])) : true
     error_message = "If provided, no backup rules can have a delete_after_days value less than the minimum retention days."
   }
 }
@@ -93,13 +93,17 @@ variable "plans" {
   type = map(object({
     continuous_backup_schedule_expression = optional(string, "cron(0 0 ? * * *)"), # Schedule for creating continuous backups, if enabled.
     create_continuous_backups             = optional(bool, false),                 # Create continuous backups for resources that support it to enable local PITR, there is no copy action for these backups.
+    intermediate_retention_days           = optional(number),                      # Number of days to retain backups in the intermediate vault.
+    local_retention_days                  = optional(number),                      # Number of days to retain backups in the member account vault. If not specified, defaults to delete_after_days.
     require_plan_name_resource_tag        = optional(bool, true),
     snapshot_from_continuous_backups      = optional(bool, true), # Generate continuous backups for resources that support it and then snapshot from them. These backups do not copy but act as a source for the backup jobs created by the rules. Currently only S3 is supported.
     use_logically_air_gapped_vault        = optional(bool, false),
     rules = list(object({
-      delete_after_days   = optional(number),
-      name                = optional(string),
-      schedule_expression = string
+      delete_after_days           = optional(number) # Number of days to retain backups in the central vault, over
+      intermediate_retention_days = optional(number) # Number of days to retain backups in the intermediate vault, overrides the plan's intermediate_retention_days.
+      local_retention_days        = optional(number) # Number of days to retain backups in the member account vault. If not specified, defaults to delete_after_days.
+      name                        = optional(string),
+      schedule_expression         = string,
     }))
   }))
   default = {}
