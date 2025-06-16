@@ -15,7 +15,7 @@ resource "aws_lambda_function" "lambda" {
   role             = module.lambda_role.role.arn
   handler          = "main.handler"
   runtime          = "python3.12"
-  source_code_hash = filebase64sha256(data.archive_file.lambda_code.output_path)
+  source_code_hash = data.archive_file.lambda_code.output_base64sha256
   filename         = data.archive_file.lambda_code.output_path
   timeout          = 900
   memory_size      = 1024
