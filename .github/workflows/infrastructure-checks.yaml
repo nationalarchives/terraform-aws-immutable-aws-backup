@@ -51,7 +51,7 @@ jobs:
           # Find all directories containing Terraform files and run init in each
           find terraform -type f -name "*.tf" -print0 | xargs -0 -n1 dirname | sort -u | while read dir; do
             echo "Initializing Terraform in: $dir"
-            terraform -chdir="$dir" init -backend=false || { echo "Terraform init failed in $dir"; exit 1; }
+            terraform fmt -check=true -diff || { echo "Terraform init failed in $dir"; exit 1; }
           done
 
       - name: Terraform Validate
