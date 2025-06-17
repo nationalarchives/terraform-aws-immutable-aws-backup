@@ -63,4 +63,5 @@ jobs:
         run: |
           echo "Running TFLint in root directory"
           # TFLint typically runs on the entire directory recursively from the current working directory.
+          tflint --init || { echo "TFLint init failed"; exit 1; }
           tflint || { echo "TFLint failed"; exit 1; }
