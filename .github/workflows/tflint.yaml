@@ -13,9 +13,8 @@ jobs:
         with:
           tflint_version: v0.58.0
 
-      - name: Install TFLint AWS Ruleset Plugin
+      - name: Initialise & Install TFLint AWS Ruleset Plugin
         run: tflint --init
-        run: tflint --install-plugin=tflint-ruleset-aws
 
       - name: Run TFLint
         run: tflint
