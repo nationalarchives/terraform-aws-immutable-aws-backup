@@ -47,12 +47,8 @@ jobs:
         # Initializes Terraform modules. '-backend=false' is crucial for CI/CD
         # as it avoids configuring a real backend, only downloading providers.
         run: |
-          echo "Running terraform init -backend=false in '/'"
-          # Find all directories containing Terraform files and run init in each
-          find terraform -type f -name "*.tf" -print0 | xargs -0 -n1 dirname | sort -u | while read dir; do
-            echo "Initializing Terraform in: $dir"
-            terraform fmt -check=true -diff || { echo "Terraform init failed in $dir"; exit 1; }
-          done
+          echo "Running terraform init -backend=false in root directory"
+          terraform init -backend=false || { echo "Terraform init failed"; exit 1; }
 
       - name: Terraform Validate
         # Validates the Terraform configuration files for syntax and consistency.
