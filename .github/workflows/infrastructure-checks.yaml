@@ -41,7 +41,7 @@ jobs:
         # '-diff' shows the differences if formatting is not correct.
         run: |
           echo "Running terraform fmt -check -diff in '/'"
-          terraform -chdir=terraform fmt -check=true -diff || { echo "Terraform format check failed"; exit 1; }
+          terraform mt -check=true -diff || { echo "Terraform format check failed"; exit 1; }
 
       - name: Terraform Init (for Validation)
         # Initializes Terraform modules. '-backend=false' is crucial for CI/CD
