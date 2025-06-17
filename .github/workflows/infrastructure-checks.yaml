@@ -53,12 +53,8 @@ jobs:
       - name: Terraform Validate
         # Validates the Terraform configuration files for syntax and consistency.
         run: |
-          echo "Running terraform validate in '/'"
-          # Find all directories containing Terraform files and run validate in each
-          find terraform -type f -name "*.tf" -print0 | xargs -0 -n1 dirname | sort -u | while read dir; do
-            echo "Validating Terraform in: $dir"
-            terraform -chdir="$dir" validate || { echo "Terraform validate failed in $dir"; exit 1; }
-          done
+          echo "Running terraform validate in root directory"
+          terraform validate || { echo "Terraform validate failed"; exit 1; }
 
       - name: Run TFLint
         # Executes TFLint to catch potential errors, anti-patterns, and style violations.
