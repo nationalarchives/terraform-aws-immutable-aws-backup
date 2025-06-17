@@ -2,16 +2,10 @@ name: Infrastructure Checks
 
 on:
   push:
-    branches:
-      - main
-      - develop
     paths:
       - '**/*.tf'
       - '.github/workflows/infrastructure-checks.yml'
   pull_request:
-    branches:
-      - main
-      - develop
     paths:
       - '**/*.tf'
       - '.github/workflows/infrastructure-checks.yml'
@@ -33,31 +27,27 @@ jobs:
         # This action installs a specific version of Terraform.
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: 1.8.0 
+          terraform_version: 1.9.0 
 
       - name: Install TFLint
         # Installs TFLint, a static analysis linter for Terraform.
         uses: terraform-linters/setup-tflint@v4
         with:
-          tflint_version: v0.50.0
+          tflint_version: v0.58.0
 
       - name: Terraform Format Check
         # Checks if Terraform files are correctly formatted.
         # '-check=true' ensures it only checks and doesn't modify.
         # '-diff' shows the differences if formatting is not correct.
         run: |
-          echo "Running terraform fmt -check -diff in 'terraform/'"
-          # Find all directories containing Terraform files and run fmt check in each
-          find terraform -type f -name "*.tf" -print0 | xargs -0 -n1 dirname | sort -u | while read dir; do
-            echo "Checking format in: $dir"
-            terraform -chdir="$dir" fmt -check=true -diff || { echo "Terraform format check failed in $dir"; exit 1; }
-          done
+          echo "Running terraform fmt -check -diff in '/'"
+          terraform -chdir=terraform fmt -check=true -diff || { echo "Terraform format check failed"; exit 1; }
 
       - name: Terraform Init (for Validation)
         # Initializes Terraform modules. '-backend=false' is crucial for CI/CD
         # as it avoids configuring a real backend, only downloading providers.
         run: |
-          echo "Running terraform init -backend=false in 'terraform/'"
+          echo "Running terraform init -backend=false in '/'"
           # Find all directories containing Terraform files and run init in each
           find terraform -type f -name "*.tf" -print0 | xargs -0 -n1 dirname | sort -u | while read dir; do
             echo "Initializing Terraform in: $dir"
@@ -67,7 +57,7 @@ jobs:
       - name: Terraform Validate
         # Validates the Terraform configuration files for syntax and consistency.
         run: |
-          echo "Running terraform validate in 'terraform/'"
+          echo "Running terraform validate in '/'"
           # Find all directories containing Terraform files and run validate in each
           find terraform -type f -name "*.tf" -print0 | xargs -0 -n1 dirname | sort -u | while read dir; do
             echo "Validating Terraform in: $dir"
@@ -79,6 +69,6 @@ jobs:
         # '-c .tflint.hcl' refers to an optional TFLint configuration file
         # in the root of your repository if you have one.
         run: |
-          echo "Running TFLint in 'terraform/'"
+          echo "Running TFLint in '/'"
           # TFLint typically runs on the entire directory recursively
           tflint terraform/ || { echo "TFLint failed"; exit 1; }
