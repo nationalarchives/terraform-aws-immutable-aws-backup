@@ -61,6 +61,6 @@ jobs:
         # '-c .tflint.hcl' refers to an optional TFLint configuration file
         # in the root of your repository if you have one.
         run: |
-          echo "Running TFLint in '/'"
-          # TFLint typically runs on the entire directory recursively
-          tflint terraform/ || { echo "TFLint failed"; exit 1; }
+          echo "Running TFLint in root directory"
+          # TFLint typically runs on the entire directory recursively from the current working directory.
+          tflint || { echo "TFLint failed"; exit 1; }
