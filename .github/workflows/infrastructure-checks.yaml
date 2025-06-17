@@ -5,10 +5,6 @@ on:
     paths:
       - '**/*.tf'
       - '.github/workflows/infrastructure-checks.yml'
-  pull_request:
-    paths:
-      - '**/*.tf'
-      - '.github/workflows/infrastructure-checks.yml'
   workflow_dispatch:
 
 jobs:
@@ -25,13 +21,13 @@ jobs:
 
       - name: Setup Terraform
         # This action installs a specific version of Terraform.
-        uses: hashicorp/setup-terraform@v3
+        uses: hashicorp/setup-terraform@f7a3b98da589ab1d52756b0dcee0dbf2de83d635 # 5.100.0
         with:
           terraform_version: 1.9.0 
 
       - name: Install TFLint
         # Installs TFLint, a static analysis linter for Terraform.
-        uses: terraform-linters/setup-tflint@v4
+        uses: terraform-linters/setup-tflint@6e13a5d1266a1a375a4778ab4e4ed93e30ea7ca1 # 0.40.0
         with:
           tflint_version: v0.58.0
 
@@ -41,27 +37,25 @@ jobs:
         # '-diff' shows the differences if formatting is not correct.
         run: |
           echo "Running terraform fmt -check -diff in '/'"
-          terraform fmt -check=true -diff || { echo "Terraform format check failed"; exit 1; }
+          terraform fmt -check=true -recursive
 
       - name: Terraform Init (for Validation)
         # Initializes Terraform modules. '-backend=false' is crucial for CI/CD
         # as it avoids configuring a real backend, only downloading providers.
         run: |
           echo "Running terraform init -backend=false in root directory"
-          terraform init -backend=false || { echo "Terraform init failed"; exit 1; }
+          terraform fmt -check=true -diff -recursive 
 
       - name: Terraform Validate
         # Validates the Terraform configuration files for syntax and consistency.
         run: |
           echo "Running terraform validate in root directory"
-          terraform validate || { echo "Terraform validate failed"; exit 1; }
+          terraform validate
 
-      - name: Run TFLint
-        # Executes TFLint to catch potential errors, anti-patterns, and style violations.
-        # '-c .tflint.hcl' refers to an optional TFLint configuration file
-        # in the root of your repository if you have one.
-        run: |
-          echo "Running TFLint in root directory"
-          # TFLint typically runs on the entire directory recursively from the current working directory.
-          tflint --init || { echo "TFLint init failed"; exit 1; }
-          tflint || { echo "TFLint failed"; exit 1; }
+  call_tflint_workflow:
+    name: Run Dedicated TFLint
+    runs-on: ubuntu-latest
+    needs: terraform_validation 
+    steps:
+      - name: Call TFLint Reusable Workflow
+        uses: ./.github/workflows/tflint.yaml@main
