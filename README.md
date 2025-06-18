@@ -1,6 +1,13 @@
 # Immutable AWS Backup Terraform module
 
-An open-source Terraform module to deploy and orchestrate AWS Backup to creating fully immutable backups within an AWS Organization.
+An open-source Terraform module to deploy and orchestrate AWS Backup for creating fully immutable backups within an AWS Organization.
+
+- Manages the deployment of Backup Vaults to member accounts using CloudFormation StackSets.
+- Stores backups in a central AWS account to protect against account closure or suspension.
+- Protection against KMS Key deletion through using AWS Managed and AWS Owned keys.
+- Support for Logically Air Gapped Vaults.
+- (Optional) Resource selection using tags.
+- Simplifies the process of configuring AWS Backup plans.
 
 ## Usage
 
@@ -47,3 +54,11 @@ module "immutable_aws_backup" {
   }
 }
 ```
+
+## About The National Archives, UK
+
+We are a non-ministerial department, and the official archive and publisher for the UK Government, and for England and Wales. We are the guardians of over 1,000 years of iconic national documents.
+
+We are expert advisers in information and records management and are a cultural, academic and heritage institution. We fulfil a leadership role for the archive sector and work to secure the future of physical and digital records.
+
+Find out more about [what we do](https://www.nationalarchives.gov.uk/about/our-role/what-we-do).
