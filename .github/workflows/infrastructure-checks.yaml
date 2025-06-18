@@ -44,7 +44,7 @@ jobs:
         # as it avoids configuring a real backend, only downloading providers.
         run: |
           echo "Running terraform init -backend=false in root directory"
-          terraform fmt -check=true -diff -recursive 
+          terraform init -backend=false
 
       - name: Terraform Validate
         # Validates the Terraform configuration files for syntax and consistency.
@@ -58,5 +58,5 @@ jobs:
     needs: terraform_validation 
     steps:
       - name: Call TFLint Reusable Workflow
-        uses: ./.github/workflows/tflint.yaml@main
+        uses: ./.github/workflows/tflint.yaml
 
