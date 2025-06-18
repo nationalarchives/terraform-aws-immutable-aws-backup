@@ -21,7 +21,7 @@ jobs:
 
       - name: Setup Terraform
         # This action installs a specific version of Terraform.
-        uses: hashicorp/setup-terraform@f7a3b98da589ab1d52756b0dcee0dbf2de83d635 # 5.100.0
+        uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
         with:
           terraform_version: 1.9.0 
 
