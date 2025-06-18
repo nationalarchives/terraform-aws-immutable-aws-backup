@@ -13,7 +13,7 @@ jobs:
         uses: terraform-linters/setup-tflint@v3
         with:
           tflint_version: v0.58.0
-          checksum: tflint-ruleset-aws_linux_amd64
+          checksum:  terraform-linters/setup-tflint@65effd5f53a9247b550ede916c626b4ba20935c5
 
       - name: Initialise & Install TFLint AWS Ruleset Plugin
         run: tflint --init

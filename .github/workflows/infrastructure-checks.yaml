@@ -51,6 +51,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: terraform_validation 
     steps:
+      - name: Checkout Repository for Reusable Workflow
+      - uses: actions/checkout@v4
+
       - name: Call TFLint Reusable Workflow
         uses: ./.github/workflows/tflint.yaml
 
