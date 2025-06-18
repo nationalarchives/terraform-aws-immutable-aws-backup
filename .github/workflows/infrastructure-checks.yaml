@@ -27,7 +27,7 @@ jobs:
 
       - name: Install TFLint
         # Installs TFLint, a static analysis linter for Terraform.
-        uses: terraform-linters/setup-tflint@6e13a5d1266a1a375a4778ab4e4ed93e30ea7ca1 # 0.40.0
+        uses: terraform-linters/setup-tflint@65effd5f53a9247b550ede916c626b4ba20935c5 # 0.58.0
         with:
           tflint_version: v0.58.0
 
