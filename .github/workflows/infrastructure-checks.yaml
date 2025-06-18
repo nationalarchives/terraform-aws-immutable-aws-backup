@@ -48,7 +48,6 @@ jobs:
 
   call_tflint_workflow:
     name: Run Dedicated TFLint
-    runs-on: ubuntu-latest
     needs: terraform_validation
     uses: ./.github/workflows/tflint.yaml
 
