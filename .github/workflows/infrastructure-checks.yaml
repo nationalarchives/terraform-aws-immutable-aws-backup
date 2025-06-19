@@ -1,0 +1,52 @@
+name: Infrastructure Checks
+
+on:
+  push:
+    paths:
+      - '**/*.tf'
+      - '.github/workflows/infrastructure-checks.yml'
+  workflow_dispatch:
+
+jobs:
+  terraform_validation:
+    name: Terraform Lint and Validate
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+
+      - name: Setup Terraform
+        # This action installs a specific version of Terraform.
+        uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
+        with:
+          terraform_version: 1.9.0 
+
+      - name: Terraform Format Check
+        # Checks if Terraform files are correctly formatted.
+        # '-check=true' ensures it only checks and doesn't modify.
+        # '-diff' shows the differences if formatting is not correct.
+        run: |
+          echo "Running terraform fmt -check -diff in '/'"
+          terraform fmt -check=true -recursive
+
+      - name: Terraform Init (for Validation)
+        # Initializes Terraform modules. '-backend=false' is crucial for CI/CD
+        # as it avoids configuring a real backend, only downloading providers.
+        run: |
+          echo "Running terraform init -backend=false in root directory"
+          terraform init -backend=false
+
+      - name: Terraform Validate
+        # Validates the Terraform configuration files for syntax and consistency.
+        run: |
+          echo "Running terraform validate in root directory"
+          terraform validate
+
+  call_tflint_workflow:
+    name: Run Dedicated TFLint
+    needs: terraform_validation
+    uses: ./.github/workflows/tflint.yaml
