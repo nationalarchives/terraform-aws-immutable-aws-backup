@@ -102,6 +102,8 @@ variable "plans" {
       delete_after_days           = optional(number) # Number of days to retain backups in the central vault, over
       intermediate_retention_days = optional(number) # Number of days to retain backups in the intermediate vault, overrides the plan's intermediate_retention_days.
       local_retention_days        = optional(number) # Number of days to retain backups in the member account vault. If not specified, defaults to delete_after_days.
+      start_backup_window_minutes = optional(number)
+      complete_backup_window_minutes = optional(number)
       name                        = optional(string),
       schedule_expression         = string,
     }))

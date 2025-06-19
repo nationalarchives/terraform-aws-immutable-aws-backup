@@ -49,7 +49,8 @@ locals {
         "schedule_expression" : { "@@assign" : rule["schedule_expression"] },
         "target_backup_vault_name" : { "@@assign" : local.member_account_backup_vault_name },
         "enable_continuous_backup" : { "@@assign" : plan["continuous_plan"] },
-        "start_backup_window_minutes" : { "@@assign" : 60 },
+        "start_backup_window_minutes" : rule.start_backup_window_minutes != null ? { "@@assign" : rule.start_backup_window_minutes } : null,
+        "complete_backup_window_minutes" : rule.complete_backup_window_minutes != null ? { "@@assign" : rule.complete_backup_window_minutes } : null,
         "lifecycle" : {
           "delete_after_days" : { "@@assign" : rule["delete_after_days"] },
         },
