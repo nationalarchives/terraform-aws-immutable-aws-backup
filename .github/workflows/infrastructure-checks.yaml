@@ -50,5 +50,3 @@ jobs:
     name: Run Dedicated TFLint
     needs: terraform_validation
     uses: ./.github/workflows/tflint.yaml
-
-
