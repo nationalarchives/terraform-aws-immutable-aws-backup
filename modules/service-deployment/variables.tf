@@ -99,13 +99,13 @@ variable "plans" {
     snapshot_from_continuous_backups      = optional(bool, true), # Generate continuous backups for resources that support it and then snapshot from them. These backups do not copy but act as a source for the backup jobs created by the rules. Currently only S3 is supported.
     use_logically_air_gapped_vault        = optional(bool, false),
     rules = list(object({
-      delete_after_days           = optional(number) # Number of days to retain backups in the central vault, over
-      intermediate_retention_days = optional(number) # Number of days to retain backups in the intermediate vault, overrides the plan's intermediate_retention_days.
-      local_retention_days        = optional(number) # Number of days to retain backups in the member account vault. If not specified, defaults to delete_after_days.
-      start_backup_window_minutes = optional(number)
+      delete_after_days              = optional(number) # Number of days to retain backups in the central vault, over
+      intermediate_retention_days    = optional(number) # Number of days to retain backups in the intermediate vault, overrides the plan's intermediate_retention_days.
+      local_retention_days           = optional(number) # Number of days to retain backups in the member account vault. If not specified, defaults to delete_after_days.
+      start_backup_window_minutes    = optional(number)
       complete_backup_window_minutes = optional(number)
-      name                        = optional(string),
-      schedule_expression         = string,
+      name                           = optional(string),
+      schedule_expression            = string,
     }))
   }))
   default = {}
