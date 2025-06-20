@@ -5,6 +5,7 @@ site_url: https://nationalarchives.github.io/terraform-aws-immutable-aws-backup/
 repo_name: nationalarchives/terraform-aws-immutable-aws-backup
 repo_url: https://github.com/nationalarchives/terraform-aws-immutable-aws-backup
 edit_uri: edit/main/docs/
+dev_addr: localhost:8888
 use_directory_urls: true
 theme:
   name: material
