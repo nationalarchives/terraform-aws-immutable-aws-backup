@@ -39,7 +39,7 @@ locals {
     # If using a Logically Air Gapped Vault, we need separate plans for the resource selections
     local.create_lag_resources ? { for k, v in var.plans : "${k}-to-lag" => merge(v, { lag_plan : true, continuous_plan : false, tag_value : k }) if v["use_logically_air_gapped_vault"] } : {},
     # If creating continuous backups, we need separate plans for the continuous backups - different lifecycle and they need to exist before the rules that snapshot from them.
-    { for k, v in var.plans : "${k}-continuous-backups" => merge(v, { lag_plan : false, continuous_plan : true, tag_value : k, rules : [{ name : "${k}-continuous-backups", schedule_expression : v["continuous_backup_schedule_expression"], delete_after_days : 35 }] }) if v["create_continuous_backups"] || v["snapshot_from_continuous_backups"] },
+    { for k, v in var.plans : "${k}-continuous-backups" => merge(v, { lag_plan : false, continuous_plan : true, tag_value : k, rules : [{ name : "${k}-continuous-backups", schedule_expression : v["continuous_backup_schedule_expression"], delete_after_days : 35, start_backup_window_minutes : null, complete_backup_window_minutes : null }] }) if v["create_continuous_backups"] || v["snapshot_from_continuous_backups"] },
   )
 
   policy_content = jsonencode({
