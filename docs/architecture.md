@@ -1,6 +1,6 @@
 # Module Architecture
 
-The module is designed to be deployed in a dedicated account within an AWS Organization, this account must be delegated certain abilities for the module to function.
+The module is designed to be deployed in a dedicated account within an AWS Organization, this account [must be delegated certain abilities for the module to function](usage.md).
 
 ![An AWS architecture diagram showing the module architecture. There are 2 AWS accounts, the Backup delegate account and the Workload accounts (of which there could be multiple). In the Backup delegate account are 3 Backup Vaults - LAG Vault, Intermediate Standard Vault, and Standard Vault -  there is also an EventBridge Event Bus. In the Workload account are resources to be backed up, these have an arrow directing backups in a Standard Vault within this account. From the Workload account's Standard Vault an arrow goes to the LAG and Intermediate Standard Vaults in the other account. The Intermediate Standard Vault then has an arrow to the Standard Vault in the Backup delegate account with a Step Function over it. An Event Bridge rule for Backup events in the Workload account forwards these to the Event Bus in the Backup delegate account.](assets/images/backup-architecture.png)
 
