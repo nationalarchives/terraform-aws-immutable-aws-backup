@@ -9,7 +9,7 @@ dev_addr: localhost:8888
 use_directory_urls: true
 theme:
   name: material
-  logo: https://raw.githubusercontent.com/nationalarchives/tna-frontend/main/src/nationalarchives/assets/images/tna-square-logo.svg
+  logo: assets/images/tna-square-logo.svg
   palette:
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
