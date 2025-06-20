@@ -45,6 +45,7 @@ extra:
 nav:
   - Home: index.md
   - Concept: concept.md
+  - Architecture: architecture.md
 
 plugins:
   - social
