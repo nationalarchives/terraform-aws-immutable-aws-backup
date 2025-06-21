@@ -73,8 +73,9 @@ resource "aws_backup_vault_lock_configuration" "standard" {
   for_each          = toset(local.standard_vaults)
   backup_vault_name = aws_backup_vault.standard[each.key].name
   # changeable_for_days = 14
-  max_retention_days = split("-", each.key)[1]
-  min_retention_days = split("-", each.key)[0]
+  changeable_for_days = var.use_governance_lock_mode ? null : var.compliance_lock_changeable_days
+  max_retention_days  = split("-", each.key)[1]
+  min_retention_days  = split("-", each.key)[0]
 }
 
 #
