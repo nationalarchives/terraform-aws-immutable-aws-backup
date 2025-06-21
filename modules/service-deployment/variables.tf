@@ -69,6 +69,18 @@ variable "member_account_resource_name_prefix" {
   default     = ""
 }
 
+variable "use_governance_lock_mode" {
+  description = "Set to true to enable Governance lock mode for the standard backup vault, which prevents changeable_for_days from being set."
+  type        = bool
+  default     = false # Default to Compliance-like mode (with changeable_for_days)
+}
+
+variable "compliance_lock_changeable_days" {
+  description = "The number of days during which a compliance-mode vault lock can be changed or deleted. Set to 0 to make it immediately immutable (not recommended for testing)."
+  type        = number
+  default     = 14
+}
+
 variable "min_retention_days" {
   description = "The minimum number of days to retain backups."
   type        = number
