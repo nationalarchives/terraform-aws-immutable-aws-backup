@@ -120,7 +120,7 @@
         "ServiceToken": { "Ref": "DeploymentHelperTopicArn" },
         "ServiceTimeout": 900,
         "RoleArn": { "Fn::GetAtt": ["DeploymentHelperRole", "Arn"] },
-        "Code": "./terraform-stacks/AWS::Backup::BackupVault.tf",
+        "Code": "./terraform-stacks/AWS_Backup_BackupVault.tf",
         "TFVARS": {
           "BackupVaultName": {
             "Ref": "BackupVaultName"
