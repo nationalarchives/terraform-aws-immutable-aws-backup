@@ -32,7 +32,6 @@ variable "deployments" {
     })), [])
     targets = list(string),
   }))
-  description = "Map of service deployments with their configurations."
 }
 
 variable "member_account_resource_name_prefix" {
