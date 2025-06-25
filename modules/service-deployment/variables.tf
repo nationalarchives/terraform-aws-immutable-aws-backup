@@ -44,6 +44,17 @@ variable "deployment_targets" {
   default     = []
 }
 
+variable "create_member_account_resources" {
+  description = "Set to true to create resources in member accounts, such as the cross-account orchestration role."
+  type        = bool
+  default     = false
+}
+
+variable "region" {
+  description = "The AWS region where resources are deployed."
+  type        = string
+}
+
 variable "max_retention_days" {
   description = "The maximum number of days to retain backups."
   type        = number

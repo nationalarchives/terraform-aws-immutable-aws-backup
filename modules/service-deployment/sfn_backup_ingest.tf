@@ -2,6 +2,70 @@ locals {
   backup_ingest_sfn_name = "${local.central_account_resource_name_prefix}-backup-ingest"
 }
 
+# This module creates the IAM role for the Step Function that orchestrates backup ingestion
+module "member_backup_orchestration_role" {
+
+  count  = var.create_member_account_resources ? 1 : 0
+  source = "../iam-role" # Re-use your existing IAM role module
+
+
+  name = local.member_backup_orchestration_role_name
+
+  
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Principal = {
+         
+          AWS = module.central_sfn_orchestrator_role.role.arn
+        },
+        Action = "sts:AssumeRole",
+      }
+    ]
+  })
+
+
+  inline_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        "Sid" : "AllowUpdateRecoveryPointLifecycle",
+        "Effect" : "Allow",
+        "Action" : "backup:UpdateRecoveryPointLifecycle",
+        "Resource" : "*"
+      },
+      {
+        "Sid" : "AllowGetTags",
+        "Effect" : "Allow",
+        "Action" : [
+          "backup-gateway:ListTagsForResource", "dsql:ListTagsForResource", "dynamodb:ListTagsOfResource",
+          "ec2:DescribeTags", "elasticfilesystem:DescribeTags", "fsx:ListTagsForResource",
+          "rds:ListTagsForResource", "redshift-serverless:ListTagsForResource", "redshift:DescribeTags",
+          "s3:GetBucketTagging", "s3:GetObjectTagging", "s3:GetObjectVersionTagging",
+          "ssm-sap:ListTagsForResource", "storagegateway:ListTagsForResource", "timestream:ListTagsForResource",
+        ],
+        "Resource" : "*"
+      },
+      {
+        "Sid" : "AllowBackupVaultAccess",
+        "Effect" : "Allow",
+        "Action" : [
+          "backup:DescribeBackupVault",
+          "backup:ListRecoveryPointsByBackupVault"
+        ],
+        "Resource" : [
+          "arn:${local.partition_id}:backup:${var.region}:${local.account_id}:backup-vault/*"
+        ]
+      }
+    ]
+  })
+}
+
+
+
+
 #
 # Step Function to copy backups between vaults
 #
@@ -222,6 +286,9 @@ resource "aws_sfn_state_machine" "backup_ingest" {
         "Output" : "{% $states.input %}",
         "Assign" : {
           "configuredDeleteAfterDays" : "{% $lookup($states.result.Tags, $lookup($retentionTags, $sourceBackupVaultType)) %}"
+        },
+        "Credentials" : {
+            "RoleArn" : "{% $sourceAccountNumber != $accountId ? $memberBackupOrchestrationRoleArn : null %}"
         },
         "Next" : "UpdateSourceRecoveryPointLifecycle"
       },
