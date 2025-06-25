@@ -17,7 +17,7 @@ module "deployment_helper_lambda" {
 module "service_deployment" {
   source   = "./modules/service-deployment"
   for_each = var.deployments
-  region = var.region
+  region   = var.region
 
   service_name       = each.key
   backup_tag_key     = each.value.backup_tag_key

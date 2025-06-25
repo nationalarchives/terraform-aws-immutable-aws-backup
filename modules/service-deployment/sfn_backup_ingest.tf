@@ -6,7 +6,7 @@ locals {
 module "member_backup_orchestration_role" {
 
   count  = var.create_member_account_resources ? 1 : 0
-  source = "../iam-role" 
+  source = "../iam-role"
 
 
   name = local.member_backup_orchestration_role_name

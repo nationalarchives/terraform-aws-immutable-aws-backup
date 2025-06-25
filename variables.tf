@@ -46,5 +46,5 @@ variable "terraform_state_bucket_name" {
 variable "region" {
   description = "The AWS region where all resources will be deployed."
   type        = string
-  default     = "eu-west-2" 
+  default     = "eu-west-2"
 }
