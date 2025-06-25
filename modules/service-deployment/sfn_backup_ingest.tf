@@ -1,5 +1,8 @@
 locals {
   backup_ingest_sfn_name = "${local.central_account_resource_name_prefix}-backup-ingest"
+  member_backup_orchestration_role_name = "${var.member_account_resource_name_prefix}${var.deployment_name}-BackupOrchestrationRole"
+  region      = var.region
+  partition_id = regex("^([^:]+)", local.current_standard_vault.arn)[0]
 }
 
 # This module creates the IAM role for the Step Function that orchestrates backup ingestion

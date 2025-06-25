@@ -55,6 +55,11 @@ variable "region" {
   type        = string
 }
 
+variable "deployment_name" {
+  description = "The name of the deployment."
+  type        = string
+}
+
 variable "max_retention_days" {
   description = "The maximum number of days to retain backups."
   type        = number
