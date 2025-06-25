@@ -18,6 +18,7 @@ module "service_deployment" {
   source   = "./modules/service-deployment"
   for_each = var.deployments
   region   = var.region
+  deployment_name = var.deployment_name
 
   service_name       = each.key
   backup_tag_key     = each.value.backup_tag_key
