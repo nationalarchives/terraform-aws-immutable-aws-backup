@@ -11,14 +11,14 @@ module "member_backup_orchestration_role" {
 
   name = local.member_backup_orchestration_role_name
 
-  
+
   assume_role_policy = jsonencode({
     Version = "2012-10-17",
     Statement = [
       {
         Effect = "Allow",
         Principal = {
-         
+
           AWS = module.central_sfn_orchestrator_role.role.arn
         },
         Action = "sts:AssumeRole",
@@ -288,7 +288,7 @@ resource "aws_sfn_state_machine" "backup_ingest" {
           "configuredDeleteAfterDays" : "{% $lookup($states.result.Tags, $lookup($retentionTags, $sourceBackupVaultType)) %}"
         },
         "Credentials" : {
-            "RoleArn" : "{% $sourceAccountNumber != $accountId ? $memberBackupOrchestrationRoleArn : null %}"
+          "RoleArn" : "{% $sourceAccountNumber != $accountId ? $memberBackupOrchestrationRoleArn : null %}"
         },
         "Next" : "UpdateSourceRecoveryPointLifecycle"
       },
