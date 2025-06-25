@@ -43,3 +43,8 @@ variable "terraform_state_bucket_name" {
   type        = string
   description = "Name of the S3 bucket used for storing Terraform state files for custom Terraform deployments."
 }
+variable "region" {
+  description = "The AWS region where all resources will be deployed."
+  type        = string
+  default     = "eu-west-2" 
+}
