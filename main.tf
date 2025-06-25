@@ -15,9 +15,9 @@ module "deployment_helper_lambda" {
 }
 
 module "service_deployment" {
-  source   = "./modules/service-deployment"
-  for_each = var.deployments
-  region   = var.region
+  source          = "./modules/service-deployment"
+  for_each        = var.deployments
+  region          = var.region
   deployment_name = var.deployment_name
 
   service_name       = each.key

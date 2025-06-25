@@ -52,5 +52,5 @@ variable "region" {
 variable "deployment_name" {
   description = "A unique name for the deployment, used to create resource names."
   type        = string
-  default     = "backup-orchestration" 
+  default     = "backup-orchestration"
 }
