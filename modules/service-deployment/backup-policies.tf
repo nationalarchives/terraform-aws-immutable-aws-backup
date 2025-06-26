@@ -45,8 +45,7 @@ locals {
   policy_content = jsonencode({
     "plans" : { for plan_name, plan in local.plans : plan_name => {
       "regions" : { "@@assign" : [data.aws_region.current.id] },
-      "rules" : { for rule_idx, rule in plan["rules"] : coalesce(rule["name"], rule_idx) =>
-        merge({
+      "rules" : { for rule_idx, rule in plan["rules"] : coalesce(rule["name"], rule_idx) =>{
           "schedule_expression" : { "@@assign" : rule["schedule_expression"] },
           "target_backup_vault_name" : { "@@assign" : local.member_account_backup_vault_name },
           "enable_continuous_backup" : { "@@assign" : plan["continuous_plan"] },
@@ -69,7 +68,6 @@ locals {
           rule["complete_backup_window_minutes"] == null ? {} : {
             "complete_backup_window_minutes" : { "@@assign" : rule["complete_backup_window_minutes"] }
           }
-        )
       },
       "selections" : {
         "resources" : {
