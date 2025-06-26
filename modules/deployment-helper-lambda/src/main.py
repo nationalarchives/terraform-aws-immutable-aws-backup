@@ -104,9 +104,10 @@ def TerraformDeployment(event, context):
     shutil.copy(tf_src, work_dir)
     # Write variables file
     variables_file = os.path.join(work_dir, "variables.tfvars.json")
+    tf_vars = { k: json.dumps(v) if isinstance(v, (dict, list)) else v for k, v in event["ResourceProperties"]["TFVARS"].items() }
     LOGGER.info(f'Writing variables to "{variables_file}".')
     with open(variables_file, "w") as f:
-        json.dump(event["ResourceProperties"]["TFVARS"], f)
+        json.dump(tf_vars, f)
     # Write provider file
     provider_file = os.path.join(work_dir, "provider.tf")
     role_arn = event["ResourceProperties"]["RoleArn"]

@@ -126,7 +126,39 @@
             "Ref": "BackupVaultName"
           },
           "ForceDestroy": true,
-          "EncryptionKeyArn": { "Ref": "KmsKeyArn" }
+          "EncryptionKeyArn": { "Ref": "KmsKeyArn" },
+          "AccessPolicy": {
+            "Version": "2012-10-17",
+            "Statement": [
+              {
+                "Effect": "Deny",
+                "Principal": {
+                  "AWS": "*"
+                },
+                "Action": [
+                  "backup:DeleteBackupVault",
+                  "backup:DeleteBackupVaultAccessPolicy",
+                  "backup:DeleteBackupVaultLockConfiguration",
+                  "backup:DeleteRecoveryPoint",
+                  "backup:PutBackupVaultAccessPolicy",
+                  "backup:PutBackupVaultLockConfiguration",
+                  "backup:PutBackupVaultNotifications",
+                  "backup:UpdateRecoveryPointLifecycle",
+                  "backup:DeleteBackupVaultNotifications"
+                ],
+                "Resource": "*",
+                "Condition": {
+                  "ArnNotLike": {
+                    "aws:PrincipalArn": [
+                      { "Fn::GetAtt": ["DeploymentHelperRole", "Arn"] },
+                      { "Fn::GetAtt": ["BackupServiceRole", "Arn"] },
+                      { "Fn::Sub": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/OrganizationAccountAccessRole" }
+                    ]
+                  }
+                }
+              }
+            ]
+          }
         }
       }
     },
