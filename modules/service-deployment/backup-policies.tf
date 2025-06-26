@@ -45,7 +45,9 @@ locals {
   policy_content = jsonencode({
     "plans" : { for plan_name, plan in local.plans : plan_name => {
       "regions" : { "@@assign" : [data.aws_region.current.id] },
-      "rules" : { for rule_idx, rule in plan["rules"] : coalesce(rule["name"], rule_idx) =>{
+      "rules" : { for rule_idx, rule in plan["rules"] : coalesce(rule["name"], rule_idx) =>
+      { for k, v in
+          flatten([
           "schedule_expression" : { "@@assign" : rule["schedule_expression"] },
           "target_backup_vault_name" : { "@@assign" : local.member_account_backup_vault_name },
           "enable_continuous_backup" : { "@@assign" : plan["continuous_plan"] },
@@ -61,13 +63,14 @@ locals {
             "${local.local_retention_days_tag}" : { "tag_key" : { "@@assign" : local.local_retention_days_tag }, "tag_value" : { "@@assign" : coalesce(rule["local_retention_days"], plan["local_retention_days"], rule["delete_after_days"], -1) } },
             "${local.intermediate_retention_days_tag}" : { "tag_key" : { "@@assign" : local.intermediate_retention_days_tag }, "tag_value" : { "@@assign" : coalesce(rule["intermediate_retention_days"], plan["intermediate_retention_days"], 7) } },
           }
-          },
+          }
           rule["start_backup_window_minutes"] == null ? {} : {
             "start_backup_window_minutes" : { "@@assign" : rule["start_backup_window_minutes"] }
           },
           rule["complete_backup_window_minutes"] == null ? {} : {
             "complete_backup_window_minutes" : { "@@assign" : rule["complete_backup_window_minutes"] }
           }
+          ]) : k => v
       },
       "selections" : {
         "resources" : {
