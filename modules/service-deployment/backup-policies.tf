@@ -63,12 +63,12 @@ locals {
             "${local.intermediate_retention_days_tag}" : { "tag_key" : { "@@assign" : local.intermediate_retention_days_tag }, "tag_value" : { "@@assign" : coalesce(rule["intermediate_retention_days"], plan["intermediate_retention_days"], 7) } },
           }
           },
-          rule.start_backup_window_minutes != null ? {
-            "start_backup_window_minutes" : { "@@assign" : rule.start_backup_window_minutes }
-          } : {},
-          rule.complete_backup_window_minutes != null ? {
-            "complete_backup_window_minutes" : { "@@assign" : rule.complete_backup_window_minutes }
-          } : {}
+          rule["start_backup_window_minutes"] == null ? {} : {
+          "start_backup_window_minutes" : { "@@assign" : rule["start_backup_window_minutes"] }
+          },
+          rule["complete_backup_window_minutes"] == null ? {} : {
+          "complete_backup_window_minutes" : { "@@assign" : rule["complete_backup_window_minutes"] }
+          }
         )
       },
       "selections" : {
