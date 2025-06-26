@@ -64,10 +64,10 @@ locals {
           }
           },
           rule["start_backup_window_minutes"] == null ? {} : {
-          "start_backup_window_minutes" : { "@@assign" : rule["start_backup_window_minutes"] }
+            "start_backup_window_minutes" : { "@@assign" : rule["start_backup_window_minutes"] }
           },
           rule["complete_backup_window_minutes"] == null ? {} : {
-          "complete_backup_window_minutes" : { "@@assign" : rule["complete_backup_window_minutes"] }
+            "complete_backup_window_minutes" : { "@@assign" : rule["complete_backup_window_minutes"] }
           }
         )
       },
