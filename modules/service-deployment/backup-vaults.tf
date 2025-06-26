@@ -70,7 +70,7 @@ resource "aws_backup_vault" "standard" {
 }
 
 resource "aws_backup_vault_lock_configuration" "standard" {
-  for_each          =  var.use_governance_lock_mode ? toset(local.standard_vaults) : toset([])
+  for_each          = var.use_governance_lock_mode ? toset(local.standard_vaults) : toset([])
   backup_vault_name = aws_backup_vault.standard[each.key].name
   # changeable_for_days = 14
   changeable_for_days = var.compliance_lock_changeable_days
