@@ -18,9 +18,9 @@ resource "aws_sns_topic_policy" "lambda_invoke" {
           StringEquals : {
             "aws:PrincipalOrgId" : var.organization_id
           },
-          StringLike : {
+          ArnLike : {
             "aws:PrincipalArn" : [
-              "arn:aws:iam::*:role/stacksets-exec-*"
+              "arn:${data.aws_partition.current.partition}:iam::*:role/stacksets-exec-*"
             ]
           }
         }
