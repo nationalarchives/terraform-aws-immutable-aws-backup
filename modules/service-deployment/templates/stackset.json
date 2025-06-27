@@ -136,15 +136,18 @@
                   "AWS": "*"
                 },
                 "Action": [
+                  "backup:CopyIntoBackupVault",
                   "backup:DeleteBackupVault",
                   "backup:DeleteBackupVaultAccessPolicy",
                   "backup:DeleteBackupVaultLockConfiguration",
+                  "backup:DeleteBackupVaultNotifications",
                   "backup:DeleteRecoveryPoint",
+                  "backup:DisassociateBackupVaultMpaApprovalTeam",
                   "backup:PutBackupVaultAccessPolicy",
                   "backup:PutBackupVaultLockConfiguration",
                   "backup:PutBackupVaultNotifications",
-                  "backup:UpdateRecoveryPointLifecycle",
-                  "backup:DeleteBackupVaultNotifications"
+                  "backup:StartBackupJob",
+                  "backup:UpdateRecoveryPointLifecycle"
                 ],
                 "Resource": "*",
                 "Condition": {
