@@ -49,7 +49,7 @@ locals {
         # Nested k, v for expression filters out null values (logic below)
         { for k, v in {
           "complete_backup_window_minutes" : { "@@assign" : rule["complete_backup_window_minutes"] },
-          "copy_actions" : plan["continuous_plan"] ? {} : {
+          "copy_actions" : plan["continuous_plan"] ? null : {
             "${plan["lag_plan"] ? local.current_lag_vault.arn : aws_backup_vault.intermediate.arn}" : { "target_backup_vault_arn" : { "@@assign" : plan["lag_plan"] ? local.current_lag_vault.arn : aws_backup_vault.intermediate.arn } }
           },
           "enable_continuous_backup" : { "@@assign" : plan["continuous_plan"] },
@@ -58,7 +58,7 @@ locals {
           },
           "schedule_expression" : { "@@assign" : rule["schedule_expression"] },
           "start_backup_window_minutes" : { "@@assign" : rule["start_backup_window_minutes"] },
-          "recovery_point_tags" : plan["continuous_plan"] ? {} : merge(
+          "recovery_point_tags" : plan["continuous_plan"] ? null : merge(
             { "${local.local_retention_days_tag}" : { "tag_key" : { "@@assign" : local.local_retention_days_tag }, "tag_value" : { "@@assign" : coalesce(rule["local_retention_days"], plan["local_retention_days"], rule["delete_after_days"], -1) } } },
             plan["lag_plan"] ? {} : { "${local.intermediate_retention_days_tag}" : { "tag_key" : { "@@assign" : local.intermediate_retention_days_tag }, "tag_value" : { "@@assign" : coalesce(rule["intermediate_retention_days"], plan["intermediate_retention_days"], 7) } } }
           )
