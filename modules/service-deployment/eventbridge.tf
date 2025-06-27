@@ -68,7 +68,7 @@ resource "aws_cloudwatch_event_rule" "event_bus_to_cloudwatch" {
   event_pattern  = jsonencode({ "source" : [{ "prefix" : "" }] })
 }
 
-resource "aws_cloudwatch_event_target" "example" {
+resource "aws_cloudwatch_event_target" "event_bus_to_cloudwatch" {
   rule           = aws_cloudwatch_event_rule.event_bus_to_cloudwatch.name
   event_bus_name = aws_cloudwatch_event_bus.event_bus.name
   arn            = aws_cloudwatch_log_group.event_bus.arn
