@@ -61,9 +61,11 @@ A rule defines when backups should be taken and how long they should be kept for
 <!-- prettier-ignore-start -->
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|----------|
+| <a name="rules_complete_backup_window_minutes"></a> [complete\_backup\_window\_minutes](#rules\_complete\_backup\_window\_minutes) | Number of minutes after a backup job is successfully started before it must be completed or it will be canceled by AWS Backup. | `number` | `null` | no |
 | <a name="rules_delete_after_days"></a> [delete\_after\_days](#rules\_delete\_after\_days) | The number of days a backup should be retained for. Required when the plan is using a LAG Vault. | `number` | `null` | no |
 | <a name="rules_intermediate_retention_days"></a> [intermediate\_retention\_days](#rules\_intermediate\_retention\_days) | The number of days to retain backups in the Intermediate Vault once copied to the Immutable Vault. Overrides the [value set on the plan](#plans\_intermediate\_retention\_days). | `number` | `null` | no |
 | <a name="rules_local_retention_days"></a> [local\_retention\_days](#rules\_local\_retention\_days) | The number of days to retain backups in the workload account vaults once copied to the Intermediate or LAG vaults. Overrides the [value set on the plan](#plans\_local\_retention\_days). | `number` | `null` | no |
 | <a name="rules_name"></a> [name](#rules\_name) | A friendly name for the rule. | `string` | Rule's index number | no |
 | <a name="rules_schedule_expression"></a> [schedule\_expression](#rules\_schedule\_expression) | A cron expression for when to start the backup window. | `string` |  | yes |
+| <a name="rules_start_backup_window_minutes"></a> [start\_backup\_window\_minutes](#rules\_start\_backup\_window\_minutes) | Number of minutes to wait before cancelling a backup job will be canceled if it doesn't start successfully. If this value is included, it must be at least 60 minutes to avoid errors. | `number` | `null` | no |
 <!-- prettier-ignore-end -->
