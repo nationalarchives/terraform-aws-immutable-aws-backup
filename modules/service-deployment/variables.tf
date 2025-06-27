@@ -8,6 +8,11 @@ variable "backup_tag_key" {
   description = "The key of the tag to be used during backup resource selection."
   type        = string
   default     = ""
+
+  validation {
+    condition     = var.backup_tag_key == "" ? alltrue([for k, p in var.plans : !p["require_plan_name_resource_tag"]]) : true
+    error_message = "backup_tag_key must be set when any plan uses the require_plan_name_resource_tag configuration."
+  }
 }
 
 variable "central_backup_service_role_arn" {
