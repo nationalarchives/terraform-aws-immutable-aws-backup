@@ -2,6 +2,7 @@ locals {
   # Internal
   account_id                                        = data.aws_caller_identity.current.account_id
   organization_id                                   = data.aws_organizations_organization.org.id
+  partition_id                                      = data.aws_partition.current.partition
   member_account_deployment_helper_role_name_suffix = "-deployment-helper"
 }
 
@@ -9,7 +10,7 @@ module "deployment_helper_lambda" {
   source = "./modules/deployment-helper-lambda"
 
   lambda_function_name                              = join("", [var.central_account_resource_name_prefix, "deployment-helper"])
-  member_account_deployment_helper_role_arn_pattern = join("", ["arn:aws:iam::*:role/", var.member_account_resource_name_prefix, "*", local.member_account_deployment_helper_role_name_suffix])
+  member_account_deployment_helper_role_arn_pattern = join("", ["arn:", local.partition_id, ":iam::*:role/", var.member_account_resource_name_prefix, "*", local.member_account_deployment_helper_role_name_suffix])
   organization_id                                   = local.organization_id
   terraform_state_bucket_name                       = var.terraform_state_bucket_name
 }
