@@ -23,7 +23,7 @@ module "lambda_role" {
         Action : [
           "s3:ListBucket"
         ]
-        Resource : "arn:aws:s3:::${var.terraform_state_bucket_name}"
+        Resource : "arn:${local.partition_id}:s3:::${var.terraform_state_bucket_name}"
       },
       {
         Effect : "Allow"
@@ -32,7 +32,7 @@ module "lambda_role" {
           "s3:PutObject",
           "s3:DeleteObject"
         ]
-        Resource : "arn:aws:s3:::${var.terraform_state_bucket_name}/*"
+        Resource : "arn:${local.partition_id}:s3:::${var.terraform_state_bucket_name}/*"
       },
       {
         Effect : "Allow"

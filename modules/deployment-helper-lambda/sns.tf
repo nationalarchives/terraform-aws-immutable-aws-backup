@@ -20,7 +20,7 @@ resource "aws_sns_topic_policy" "lambda_invoke" {
           },
           ArnLike : {
             "aws:PrincipalArn" : [
-              "arn:${data.aws_partition.current.partition}:iam::*:role/stacksets-exec-*"
+              "arn:${local.partition_id}:iam::*:role/stacksets-exec-*"
             ]
           }
         }
