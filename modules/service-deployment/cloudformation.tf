@@ -11,15 +11,20 @@ resource "aws_cloudformation_stack_set" "member_account_deployments" {
     BackupServiceRoleName       = local.member_account_backup_service_role_name
     BackupServiceRolePrincipals = join(", ", [module.backup_ingest_sfn_role.role.arn])
     BackupVaultName             = local.member_account_backup_vault_name
-    CentralEventBusArn          = aws_cloudwatch_event_bus.event_bus.arn
-    DeploymentHelperRoleArn     = var.central_deployment_helper_role_arn
-    DeploymentHelperRoleName    = local.member_account_deployment_helper_role_name
-    DeploymentHelperTopicArn    = var.central_deployment_helper_topic_arn
-    EventBridgeRuleName         = local.member_account_eventbridge_rule_name
-    ForceDeployment             = "1"
-    KmsKeyArn                   = aws_kms_key.key.arn
-    OrganizationId              = local.organization_id
-    RestoreVaultName            = local.member_account_restore_vault_name
+    CentralBackupVaultArns = join(", ", flatten([
+      aws_backup_vault.intermediate.arn,
+      values(aws_backup_vault.standard)[*].arn,
+      values(aws_backup_logically_air_gapped_vault.lag)[*].arn
+    ]))
+    CentralEventBusArn       = aws_cloudwatch_event_bus.event_bus.arn
+    DeploymentHelperRoleArn  = var.central_deployment_helper_role_arn
+    DeploymentHelperRoleName = local.member_account_deployment_helper_role_name
+    DeploymentHelperTopicArn = var.central_deployment_helper_topic_arn
+    EventBridgeRuleName      = local.member_account_eventbridge_rule_name
+    ForceDeployment          = "1"
+    KmsKeyArn                = aws_kms_key.key.arn
+    OrganizationId           = local.organization_id
+    RestoreVaultName         = local.member_account_restore_vault_name
   }
 
   auto_deployment {
