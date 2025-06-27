@@ -34,6 +34,4 @@ module "service_deployment" {
   central_deployment_helper_topic_arn               = module.deployment_helper_lambda.sns_topic.arn
   member_account_deployment_helper_role_name_suffix = local.member_account_deployment_helper_role_name_suffix
   member_account_resource_name_prefix               = var.member_account_resource_name_prefix
-
-  depends_on = [module.deployment_helper_lambda]
 }
