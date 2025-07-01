@@ -39,7 +39,7 @@ module "immutable_aws_backup" {
             },
             {
               name                = "weekly",
-              schedule_expression = "cron(0 05 ? * 2 *)"
+              schedule_expression = "cron(0 03 ? * 2 *)"
               delete_after_days   = 28
             },
             {
