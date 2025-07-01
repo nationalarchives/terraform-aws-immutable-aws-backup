@@ -32,12 +32,12 @@ module "immutable_aws_backup" {
             },
             {
               name                = "weekly",
-              schedule_expression = "cron(0 3 ? * * *)"
+              schedule_expression = "cron(0 3 ? * 2 *)"
               delete_after_days   = 28
             },
             {
               name                = "monthly",
-              schedule_expression = "cron(0 3 ? * * *)"
+              schedule_expression = "cron(0 3 1 * ? *)"
               delete_after_days   = 90
             }
           ]
