@@ -12,7 +12,7 @@ An example delegation policy for this purpose is provided below.
 
 - replace `${aws_backup_account_id}` with the AWS Account ID of your Backup account
 
-- replace `${aws_management_account_id}` with the AWS Account ID of your Management account
+- replace `${management_account_id}` with the AWS Account ID of your Management account
 
 - replace `${org_id}` with your Organization ID
 
