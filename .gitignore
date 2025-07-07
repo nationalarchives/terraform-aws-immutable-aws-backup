@@ -44,3 +44,6 @@ terraform.rc
 
 # Cache files
 .cache/
+
+# MacOS
+.DS_Store

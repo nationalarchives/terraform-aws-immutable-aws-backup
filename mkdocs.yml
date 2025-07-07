@@ -46,7 +46,9 @@ nav:
   - Home: index.md
   - Concept: concept.md
   - Architecture: architecture.md
-  - Using the module: usage.md
+  - Usage: 
+    - Using the module: usage.md
+    - Organizations policy: org-policy.md
 
 plugins:
   - social

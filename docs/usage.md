@@ -9,21 +9,21 @@ The module is designed to be deployed into a delegated administrator account wit
 - [All features are enabled](https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_org_support-all-features.html) for your AWS Organization.
 - [Trusted access with AWS Backup](https://docs.aws.amazon.com/organizations/latest/userguide/services-that-can-integrate-backup.html#integrate-enable-ta-backup) is enabled on your Organization.
 - [Backup Policies](https://docs.aws.amazon.com/organizations/latest/userguide/enable-policy-type.html) within your Organization.
-- [Enable cross-account backup](https://docs.aws.amazon.com/aws-backup/latest/devguide/create-cross-account-backup.html#prereq-cab) are enabled within your Organization.
+- [Enable cross-account backup](https://docs.aws.amazon.com/aws-backup/latest/devguide/create-cross-account-backup.html#prereq-cab) is turned on within your Organization.
 - [AWS Backup cross-account monitoring](https://docs.aws.amazon.com/aws-backup/latest/devguide/manage-cross-account.html#enable-cross-account) is enabled within your Organization.
 - The account you are deploying to has been [delegated to manage AWS Backup](https://docs.aws.amazon.com/aws-backup/latest/devguide/manage-cross-account.html#backup-delegatedadmin).
 - The account you are deploying to has been [delegated to manage CloudFormation StackSets](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/stacksets-orgs-delegated-admin.html).
-- The account you are deploying to has permission to [manage Backup Policies](https://docs.aws.amazon.com/organizations/latest/userguide/orgs_delegate_policies.html) through your Organization's resource policy.
+- The account you are deploying to has permission to [manage Backup Policies](https://docs.aws.amazon.com/organizations/latest/userguide/orgs_delegate_policies.html) as detailed in [our example delegation policy](./org-policy.md).
 
 ## Deployment & Configuration
 
 The module is to be deployed only once per Organization, within the configuration for the module you can define multiple deployments with unique settings.
 
-### Variables
-
 ### Deployments
 
 A deployment is an instance of the backup solution. Within the deployment account it creates a single set of resources (Backup Vaults, KMS Key, CloudFormation StackSet, etc.) that can then be used by multiple workload accounts. Deployments create a **security boundary** for your backups. The key value for each deployment is used to generate unique resource names within the deployment account and workload accounts.
+
+### Variables
 
 <!-- prettier-ignore-start -->
 | Name | Description | Type | Default | Required |

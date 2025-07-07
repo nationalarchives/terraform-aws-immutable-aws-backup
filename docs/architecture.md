@@ -26,6 +26,7 @@ However, as CloudFormation is a declarative syntax for provisioning resources, e
 - Standard Backup Vault
 - LAG Backup Vault
 - AWS Backup Service Role
+- KMS Customer Managed Key
 - CloudFormation StackSet
 
 ## Member account resources
