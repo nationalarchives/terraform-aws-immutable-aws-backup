@@ -2,7 +2,7 @@
 
 The account to which you are deploying this module requires permission to [manage Backup Policies](https://docs.aws.amazon.com/organizations/latest/userguide/orgs_delegate_policies.html) through your Organization's delegation policy.
 
-An example delegation policy for this purpose is provided below. 
+An example delegation policy is provided below, derived from [AWS guidelines](https://aws.amazon.com/blogs/storage/delegated-administrator-support-for-aws-backup). 
 
 - In the console for your AWS management account, navigate to AWS Organizations -> Settings -> Delegated administrator for AWS Organizations -> Delegate
 
@@ -15,6 +15,8 @@ An example delegation policy for this purpose is provided below.
 - replace `${management_account_id}` with the AWS Account ID of your Management account
 
 - replace `${org_id}` with your Organization ID
+
+- replace `${root_id}` with your Organization Root ID
 
 ```json
 {
@@ -80,7 +82,8 @@ An example delegation policy for this purpose is provided below.
       "Resource": [
         "arn:aws:organizations::${management_account_id}:policy/*/backup_policy/*",
         "arn:aws:organizations::${management_account_id}:account/${org_id}/*",
-        "arn:aws:organizations::${management_account_id}:ou/${org_id}/*"
+        "arn:aws:organizations::${management_account_id}:ou/${org_id}/*",
+        "arn:aws:organizations::${management_account_id}:root/${org_id}/${root_id}"
       ],
       "Condition": {
         "StringEquals": {
