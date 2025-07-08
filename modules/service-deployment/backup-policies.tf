@@ -44,7 +44,7 @@ locals {
 
   policy_content = jsonencode({
     "plans" : { for plan_name, plan in local.plans : join("-", [local.central_account_resource_name_prefix, plan_name]) => {
-      "regions" : { "@@assign" : [data.aws_region.current.id] },
+      "regions" : { "@@assign" : [local.region] },
       "rules" : { for rule_idx, rule in plan["rules"] : coalesce(rule["name"], rule_idx) =>
         # Nested k, v for expression filters out null values (logic below)
         { for k, v in {

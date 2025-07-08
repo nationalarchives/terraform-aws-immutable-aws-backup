@@ -46,7 +46,7 @@ resource "aws_cloudformation_stack_set" "member_account_deployments" {
 resource "aws_cloudformation_stack_instances" "member_account_deployments" {
   stack_set_name = aws_cloudformation_stack_set.member_account_deployments.name
   call_as        = "DELEGATED_ADMIN"
-  regions        = [data.aws_region.current.id]
+  regions        = [local.region]
   deployment_targets {
     organizational_unit_ids = var.deployment_targets
   }
