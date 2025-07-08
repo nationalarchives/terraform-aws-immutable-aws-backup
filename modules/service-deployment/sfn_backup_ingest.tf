@@ -1,5 +1,41 @@
 locals {
-  backup_ingest_sfn_name = "${local.central_account_resource_name_prefix}-backup-ingest"
+  backup_ingest_sfn_name      = "${local.central_account_resource_name_prefix}-backup-ingest"
+  backup_ingest_sfn_role_name = "${local.backup_ingest_sfn_name}-sfn"
+}
+
+#
+# IAM Role for the Step Function to assume within states
+# This is required to prevent a self-assuming role which could enable persistence.
+#
+module "backup_ingest_sfn_state_role" {
+  source = "../iam-role"
+
+  name = "${local.backup_ingest_sfn_name}-sfn-state"
+  assume_role_policy = jsonencode({
+    Version : "2012-10-17",
+    Statement : [
+      {
+        Effect : "Allow",
+        Principal : {
+          AWS : "arn:aws:iam::${local.account_id}:role/${local.backup_ingest_sfn_role_name}"
+        },
+        Action : "sts:AssumeRole"
+      }
+    ]
+  })
+  inline_policy = jsonencode({
+    Version : "2012-10-17"
+    Statement : [
+      {
+        Effect : "Allow",
+        Action : [
+          "backup:ListTags",
+          "backup:UpdateRecoveryPointLifecycle"
+        ],
+        Resource : "*"
+      }
+    ]
+  })
 }
 
 #
@@ -8,7 +44,7 @@ locals {
 module "backup_ingest_sfn_role" {
   source = "../iam-role"
 
-  name = "${local.backup_ingest_sfn_name}-sfn"
+  name = local.backup_ingest_sfn_role_name
   assume_role_policy = jsonencode({
     Version : "2012-10-17"
     Statement : [
@@ -74,7 +110,6 @@ module "backup_ingest_sfn_role" {
         "Action" : [
           "backup:DescribeCopyJob",
           "backup:StartCopyJob",
-          "backup:UpdateRecoveryPointLifecycle",
           "backup:ListTags"
         ],
         "Resource" : "*"
@@ -100,12 +135,15 @@ module "backup_ingest_sfn_role" {
         "Resource" : var.central_backup_service_role_arn
       },
       {
-        Sid : "AllowAssumeRoleInMemberAccounts",
+        Sid : "AllowAssumeRoleForStates",
         Effect : "Allow",
         Action : [
           "sts:AssumeRole"
         ],
-        Resource : "arn:aws:iam::*:role/${local.member_account_backup_service_role_name}",
+        Resource : [
+          module.backup_ingest_sfn_state_role.role.arn,
+          "arn:${local.partition_id}:iam::*:role/${local.member_account_backup_service_role_name}"
+        ]
         Condition : {
           "ForAnyValue:StringLike" : {
             "aws:ResourceOrgPaths" : local.deployment_ou_paths_including_children
@@ -142,6 +180,7 @@ resource "aws_sfn_state_machine" "backup_ingest" {
         "Assign" : {
           "accountId" : local.account_id,
           "centralBackupServiceRoleArn" : var.central_backup_service_role_arn,
+          "backupIngestSfnStateRoleArn" : module.backup_ingest_sfn_state_role.role.arn,
           "destinationBackupVaultArn" : "{% $states.input.detail.destinationBackupVaultArn %}",
           "destinationRecoveryPointArn" : "{% $states.input.detail.destinationRecoveryPointArn %}",
           "intermediateBackupVaultArn" : aws_backup_vault.intermediate.arn,
@@ -188,7 +227,7 @@ resource "aws_sfn_state_machine" "backup_ingest" {
             "Assign" : {
               "sourceBackupVaultType" : "intermediate",
             },
-            "Next" : "GetDestinationRecoveryPointTags"
+            "Next" : "GetSourceRecoveryPointTags"
           },
           {
             "Comment" : "Successful Member -> LAG",
@@ -196,7 +235,7 @@ resource "aws_sfn_state_machine" "backup_ingest" {
             "Assign" : {
               "sourceBackupVaultType" : "member",
             },
-            "Next" : "GetDestinationRecoveryPointTags"
+            "Next" : "GetSourceRecoveryPointTags"
           }
         ],
         "Default" : "Succeed",
@@ -211,13 +250,14 @@ resource "aws_sfn_state_machine" "backup_ingest" {
           "SourceBackupVaultName" : "{% $destinationBackupVaultName %}",
         },
         "Output" : "{% $states.input %}",
-        "Next" : "GetDestinationRecoveryPointTags"
+        "Next" : "GetSourceRecoveryPointTags"
       },
-      "GetDestinationRecoveryPointTags" : {
+      "GetSourceRecoveryPointTags" : {
         "Type" : "Task",
         "Resource" : "arn:aws:states:::aws-sdk:backup:listTags",
+        "Credentials" : { "RoleArn" : "{% $sourceAccountNumber = $accountId ? $backupIngestSfnStateRoleArn : $sourceAccountBackupServiceRoleArn %}" },
         "Arguments" : {
-          "ResourceArn" : "{% $destinationRecoveryPointArn %}"
+          "ResourceArn" : "{% $sourceRecoveryPointArn %}"
         },
         "Output" : "{% $states.input %}",
         "Assign" : {
@@ -226,38 +266,9 @@ resource "aws_sfn_state_machine" "backup_ingest" {
         "Next" : "UpdateSourceRecoveryPointLifecycle"
       },
       "UpdateSourceRecoveryPointLifecycle" : {
-        "Type" : "Choice",
-        "Choices" : [
-          {
-            "Comment" : "",
-            "Condition" : "{% $sourceBackupVaultType = 'member' %}",
-            "Next" : "UpdateSourceRecoveryPointLifecycleMemberAccount"
-          },
-          {
-            "Comment" : "",
-            "Condition" : "{% $sourceBackupVaultType = 'intermediate' %}",
-            "Next" : "UpdateSourceRecoveryPointLifecycleCentralAccount"
-          }
-        ],
-        "Default" : "Succeed"
-      },
-      "UpdateSourceRecoveryPointLifecycleMemberAccount" : {
         "Type" : "Task",
         "Resource" : "arn:aws:states:::aws-sdk:backup:updateRecoveryPointLifecycle",
-        "Credentials" : { "RoleArn" : "{% $sourceBackupVaultType = 'member' ? $sourceAccountBackupServiceRoleArn : $centralBackupServiceRoleArn %}" },
-        "Arguments" : {
-          "BackupVaultName" : "{% $sourceBackupVaultName %}",
-          "RecoveryPointArn" : "{% $sourceRecoveryPointArn %}",
-          "Lifecycle" : {
-            "DeleteAfterDays" : "{% $number($configuredDeleteAfterDays) %}"
-          }
-        },
-        "Output" : "{% $states.input %}",
-        "Next" : "Succeed"
-      },
-      "UpdateSourceRecoveryPointLifecycleCentralAccount" : {
-        "Type" : "Task",
-        "Resource" : "arn:aws:states:::aws-sdk:backup:updateRecoveryPointLifecycle",
+        "Credentials" : { "RoleArn" : "{% $sourceAccountNumber = $accountId ? $backupIngestSfnStateRoleArn : $sourceAccountBackupServiceRoleArn %}" },
         "Arguments" : {
           "BackupVaultName" : "{% $sourceBackupVaultName %}",
           "RecoveryPointArn" : "{% $sourceRecoveryPointArn %}",
