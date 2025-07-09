@@ -28,6 +28,7 @@ However, as CloudFormation is a declarative syntax for provisioning resources, e
 - AWS Backup Service Role
 - KMS Customer Managed Key
 - CloudFormation StackSet
+- Resource Access Manager (RAM) share
 
 ## Member account resources
 
