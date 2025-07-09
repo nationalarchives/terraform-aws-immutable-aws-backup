@@ -109,12 +109,20 @@ module "default_to_event_bus_role" {
   })
 }
 
+# This rule is replicated in the StackSet, make sure to update both places if changes are made.
 resource "aws_cloudwatch_event_rule" "default_to_event_bus" {
   name        = "backup-events-to-${aws_cloudwatch_event_bus.event_bus.name}-event-bus"
   description = "Forwards AWS Backup events to the ${aws_cloudwatch_event_bus.event_bus.name} event bus."
   event_pattern = jsonencode({
-    source : ["aws.backup"]
-    "detail-type" : ["Backup Job State Change", "Copy Job State Change", "Restore Job State Change"]
+    source : ["aws.backup"],
+    "detail-type" : ["Backup Job State Change", "Copy Job State Change"],
+    "detail" : {
+      "$or" : [
+        { "backupVaultName" : [local.member_account_backup_vault_name] },
+        { "sourceBackupVaultArn" : local.central_backup_vault_arns },
+        { "destinationBackupVaultArn" : local.central_backup_vault_arns }
+      ]
+    }
   })
 }
 
