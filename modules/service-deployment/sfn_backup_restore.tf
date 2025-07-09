@@ -91,7 +91,7 @@ resource "aws_sfn_state_machine" "backup_restore" {
         "Assign" : {
           "accountId" : local.account_id,
           "backupVaultArnPrefix" : "arn:${local.partition_id}:backup:${local.region}:<accountId>:backup-vault:",
-          "centralBackupServiceRoleArn" : var.central_backup_service_role_arn,
+          "centralBackupServiceRoleArn" : module.backup_service_role.role.arn,
           "iamRoleArnPrefix" : "arn:${local.partition_id}:iam::<accountId>:role/",
           "intermediateBackupVaultArn" : aws_backup_vault.intermediate.arn,
           "memberAccountBackupServiceRoleName" : local.member_account_backup_service_role_name,

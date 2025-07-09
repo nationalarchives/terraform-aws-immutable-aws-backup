@@ -30,7 +30,6 @@ module "service_deployment" {
 
   central_account_resource_name_prefix              = var.central_account_resource_name_prefix
   central_backup_service_linked_role_arn            = local.backup_service_linked_role_arn
-  central_backup_service_role_arn                   = module.backup_service_role.role.arn
   central_deployment_helper_role_arn                = module.deployment_helper_lambda.lambda_role_arn
   central_deployment_helper_topic_arn               = module.deployment_helper_lambda.sns_topic.arn
   member_account_deployment_helper_role_name_suffix = local.member_account_deployment_helper_role_name_suffix

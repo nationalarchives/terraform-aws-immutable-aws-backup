@@ -3,9 +3,9 @@
 #
 
 module "backup_service_role" {
-  source = "./modules/iam-role"
+  source = "../iam-role"
 
-  name = join("", [var.central_account_resource_name_prefix, "backup-service-role"])
+  name = join("", [local.central_account_resource_name_prefix, "-backup-service-role"])
   assume_role_policy = jsonencode({
     Version : "2012-10-17"
     Statement : [

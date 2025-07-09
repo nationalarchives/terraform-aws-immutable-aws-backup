@@ -97,7 +97,7 @@ module "backup_ingest_sfn_role" {
         "Action" : [
           "iam:PassRole"
         ],
-        "Resource" : var.central_backup_service_role_arn
+        "Resource" : module.backup_service_role.role.arn,
       },
       {
         Sid : "AllowAssumeRoleInMemberAccounts",
@@ -141,7 +141,7 @@ resource "aws_sfn_state_machine" "backup_ingest" {
         "Output" : "", # Don't output anything to reduce CloudWatch Logs ingest
         "Assign" : {
           "accountId" : local.account_id,
-          "centralBackupServiceRoleArn" : var.central_backup_service_role_arn,
+          "centralBackupServiceRoleArn" : module.backup_service_role.role.arn,
           "destinationBackupVaultArn" : "{% $states.input.detail.destinationBackupVaultArn %}",
           "destinationRecoveryPointArn" : "{% $states.input.detail.destinationRecoveryPointArn %}",
           "intermediateBackupVaultArn" : aws_backup_vault.intermediate.arn,
