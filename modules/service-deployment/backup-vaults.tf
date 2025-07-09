@@ -83,4 +83,9 @@ resource "aws_backup_vault_lock_configuration" "standard" {
 locals {
   current_standard_vault = aws_backup_vault.standard[local.current_vault_configuration]
   current_lag_vault      = local.create_lag_resources ? aws_backup_logically_air_gapped_vault.lag[local.current_vault_configuration] : null
+  central_backup_vault_arns = flatten([
+    aws_backup_vault.intermediate.arn,
+    values(aws_backup_vault.standard)[*].arn,
+    values(aws_backup_logically_air_gapped_vault.lag)[*].arn
+  ])
 }
