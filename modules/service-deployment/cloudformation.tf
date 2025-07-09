@@ -7,10 +7,11 @@ resource "aws_cloudformation_stack_set" "member_account_deployments" {
   template_body    = file("${path.module}/templates/stackset.json")
 
   parameters = {
-    BackupServiceLinkedRoleArn  = var.central_backup_service_linked_role_arn
-    BackupServiceRoleName       = local.member_account_backup_service_role_name
-    BackupServiceRolePrincipals = join(", ", [module.backup_ingest_sfn_role.role.arn])
-    BackupVaultName             = local.member_account_backup_vault_name
+    BackupServiceRoleName             = local.member_account_backup_service_role_name
+    BackupServiceRolePrincipals       = join(", ", [module.backup_ingest_sfn_role.role.arn])
+    BackupVaultName                   = local.member_account_backup_vault_name
+    CentralBackupServiceLinkedRoleArn = var.central_backup_service_linked_role_arn
+    CentralBackupServiceRoleArn       = module.backup_service_role.role.arn
     CentralBackupVaultArns = join(", ", flatten([
       aws_backup_vault.intermediate.arn,
       values(aws_backup_vault.standard)[*].arn,

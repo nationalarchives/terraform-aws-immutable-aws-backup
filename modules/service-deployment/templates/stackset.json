@@ -8,10 +8,13 @@
       "Type": "List<String>",
       "Description": "List of principals that can assume the Backup Service Role in addition to the AWS Backup service."
     },
-    "BackupServiceLinkedRoleArn": {
+    "BackupVaultName": {
       "Type": "String"
     },
-    "BackupVaultName": {
+    "CentralBackupServiceLinkedRoleArn": {
+      "Type": "String"
+    },
+    "CentralBackupServiceRoleArn": {
       "Type": "String"
     },
     "CentralBackupVaultArns": {
@@ -102,6 +105,23 @@
                   "Effect": "Allow",
                   "Action": "backup:UpdateRecoveryPointLifecycle",
                   "Resource": "*"
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": ["backup:DescribeCopyJob", "backup:StartCopyJob", "backup:ListTags"],
+                  "Resource": "*"
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": ["iam:PassRole"],
+                  "Resource": {
+                    "Fn::Sub": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${BackupServiceRoleName}"
+                  },
+                  "Condition": {
+                    "StringEquals": {
+                      "iam:PassedToService": "backup.amazonaws.com"
+                    }
+                  }
                 }
               ]
             }
@@ -135,6 +155,7 @@
             "Version": "2012-10-17",
             "Statement": [
               {
+                "Sid": "ProtectVaultAndContents",
                 "Effect": "Deny",
                 "Principal": {
                   "AWS": "*"
@@ -159,10 +180,20 @@
                     "aws:PrincipalArn": [
                       { "Fn::GetAtt": ["DeploymentHelperRole", "Arn"] },
                       { "Fn::GetAtt": ["BackupServiceRole", "Arn"] },
-                      { "Fn::Sub": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/OrganizationAccountAccessRole" }
+                      { "Fn::Sub": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/OrganizationAccountAccessRole" },
+                      { "Ref": "CentralBackupServiceRoleArn" }
                     ]
                   }
                 }
+              },
+              {
+                "Sid": "AllowCopiesForRestorations",
+                "Effect": "Allow",
+                "Principal": {
+                  "AWS": [{ "Ref": "CentralBackupServiceRoleArn" }]
+                },
+                "Action": ["backup:CopyIntoBackupVault"],
+                "Resource": "*"
               }
             ]
           }
@@ -280,7 +311,7 @@
   "Outputs": {
     "CentralAccountBackupServiceLinkedRoleArn": {
       "Description": "ARN of the Backup Service-Linked Role in the central account.",
-      "Value": { "Ref": "BackupServiceLinkedRoleArn" }
+      "Value": { "Ref": "CentralBackupServiceLinkedRoleArn" }
     }
   }
 }

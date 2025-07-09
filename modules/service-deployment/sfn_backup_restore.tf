@@ -1,11 +1,5 @@
 locals {
   backup_restore_sfn_name = "${local.central_account_resource_name_prefix}-backup-restore"
-
-  backup_restore_sfn_vault_to_next_vault = merge(
-    { for i in aws_backup_vault.standard : i.name => [aws_backup_vault.intermediate.arn, aws_backup_vault.intermediate.name] },
-    { (aws_backup_vault.intermediate.name) : ["arn:${local.partition_id}:${local.region}:<accountNumber>:backup-vault:${local.member_account_backup_vault_name}", local.member_account_backup_vault_name] },
-    { (local.member_account_backup_vault_name) : ["arn:${local.partition_id}:${local.region}:<accountNumber>:backup-vault:${local.member_account_restore_vault_name}", local.member_account_restore_vault_name] }
-  )
 }
 
 #
@@ -202,10 +196,10 @@ resource "aws_sfn_state_machine" "backup_restore" {
       "StartCopyToDestinationAccountRestoreVault" : {
         "Type" : "Task",
         "Resource" : "arn:aws:states:::aws-sdk:backup:startCopyJob",
-        "Credentials" : { "RoleArn" : "{% $replace($iamRoleArnPrefix, '<accountNumber>', $states.input.destinationAccount) & $memberAccountBackupServiceRoleName %}" },
+        "Credentials" : { "RoleArn" : "{% $replace($iamRoleArnPrefix, '<accountId>', $states.input.destinationAccount) & $memberAccountBackupServiceRoleName %}" },
         "Arguments" : {
-          "DestinationBackupVaultArn" : "{% $replace($iamRoleArnPrefix, '<accountNumber>', $states.input.destinationAccount) & $memberAccountBackupServiceRoleName %}",
-          "IamRoleArn" : "{% 'arn:' & $partition & ':iam::' & $states.input.destinationAccount & ':role/' & $memberAccountBackupServiceRoleName %}",
+          "DestinationBackupVaultArn" : "{% $replace($backupVaultArnPrefix, '<accountId>', $states.input.destinationAccount) & $memberAccountRestoreVaultName %}",
+          "IamRoleArn" : "{% $replace($iamRoleArnPrefix, '<accountId>', $states.input.destinationAccount) & $memberAccountBackupServiceRoleName  %}",
           "RecoveryPointArn" : "{% $states.input.CopyJob ? $states.input.CopyJob.DestinationRecoveryPointArn : $states.input.recoveryPointArn %}",
           "SourceBackupVaultName" : "{% $memberAccountBackupVaultName %}",
         },
