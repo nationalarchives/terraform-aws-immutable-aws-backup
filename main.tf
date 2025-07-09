@@ -3,6 +3,7 @@ locals {
   account_id                                        = data.aws_caller_identity.current.account_id
   organization_id                                   = data.aws_organizations_organization.org.id
   partition_id                                      = data.aws_partition.current.partition
+  region                                            = data.aws_region.current.region
   member_account_deployment_helper_role_name_suffix = "-deployment-helper"
 }
 
