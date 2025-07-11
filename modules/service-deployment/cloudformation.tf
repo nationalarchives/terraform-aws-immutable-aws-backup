@@ -19,7 +19,7 @@ resource "aws_cloudformation_stack_set" "member_account_deployments" {
     CentralBackupVaultRegionlessArns = join(", ", local.central_backup_vault_regionless_arns)
     DeploymentHelperRoleArn          = var.central_deployment_helper_role_arn
     DeploymentHelperRoleName         = local.member_account_deployment_helper_role_name
-    DeploymentHelperTopicArn         = var.central_deployment_helper_topic_arn
+    DeploymentHelperTopicName        = var.central_deployment_helper_topic_name
     DeploymentRegions                = join(", ", var.deployment_regions)
     EventBridgeRuleName              = local.member_account_eventbridge_rule_name
     EventBusName                     = local.event_bus_name

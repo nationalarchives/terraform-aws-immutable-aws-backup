@@ -5,14 +5,20 @@ locals {
   partition_id                                      = data.aws_partition.current.partition
   region                                            = data.aws_region.current.region
   member_account_deployment_helper_role_name_suffix = "-deployment-helper"
+
+  deployment_regions = [local.region]
 }
 
-module "deployment_helper_lambda" {
-  source = "./modules/deployment-helper-lambda"
-
+module "deployment_helper" {
+  source = "./modules/deployment-helper"
+  current = {
+    organization_id = local.organization_id
+    partition       = local.partition_id
+    region          = local.region
+  }
+  deployment_regions                                = local.deployment_regions
   lambda_function_name                              = join("", [var.central_account_resource_name_prefix, "deployment-helper"])
   member_account_deployment_helper_role_arn_pattern = join("", ["arn:", local.partition_id, ":iam::*:role/", var.member_account_resource_name_prefix, "*", local.member_account_deployment_helper_role_name_suffix])
-  organization_id                                   = local.organization_id
   terraform_state_bucket_name                       = var.terraform_state_bucket_name
 }
 
@@ -32,9 +38,9 @@ module "service_deployment" {
   central_account_resource_name_prefix              = var.central_account_resource_name_prefix
   central_backup_service_linked_role_arn            = local.backup_service_linked_role_arn
   central_backup_service_role_arn                   = module.backup_service_role.role.arn
-  central_deployment_helper_role_arn                = module.deployment_helper_lambda.lambda_role_arn
-  central_deployment_helper_topic_arn               = module.deployment_helper_lambda.sns_topic.arn
-  deployment_regions                                = [local.region]
+  central_deployment_helper_role_arn                = module.deployment_helper.lambda_role.arn
+  central_deployment_helper_topic_name              = module.deployment_helper.sns_topic.name
+  deployment_regions                                = local.deployment_regions
   member_account_deployment_helper_role_name_suffix = local.member_account_deployment_helper_role_name_suffix
   member_account_resource_name_prefix               = var.member_account_resource_name_prefix
 }

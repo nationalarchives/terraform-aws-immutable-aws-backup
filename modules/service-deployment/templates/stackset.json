@@ -31,9 +31,9 @@
     "KmsKeyId": {
       "Type": "String"
     },
-    "DeploymentHelperTopicArn": {
+    "DeploymentHelperTopicName": {
       "Type": "String",
-      "Description": "ARN of the central SNS topic used to trigger the deployment helper Lambda function."
+      "Description": "Name of the central SNS topic used to trigger the deployment helper Lambda function."
     },
     "DeploymentHelperRoleArn": {
       "Type": "String",
@@ -131,7 +131,9 @@
       "Type": "Custom::AWS__IAM__ServiceLinkedRole",
       "Condition": "CreateGlobalResources",
       "Properties": {
-        "ServiceToken": { "Ref": "DeploymentHelperTopicArn" },
+        "ServiceToken": {
+          "Fn::Sub": "arn:${AWS::Partition}:sns:${AWS::Region}:${CentralAccountId}:${DeploymentHelperTopicName}"
+        },
         "ServiceTimeout": 120,
         "RoleArn": { "Fn::GetAtt": ["DeploymentHelperRole", "Arn"] },
         "AWSServiceName": "backup.amazonaws.com"
@@ -140,7 +142,9 @@
     "BackupVault": {
       "Type": "Custom::TerraformDeployment",
       "Properties": {
-        "ServiceToken": { "Ref": "DeploymentHelperTopicArn" },
+        "ServiceToken": {
+          "Fn::Sub": "arn:${AWS::Partition}:sns:${AWS::Region}:${CentralAccountId}:${DeploymentHelperTopicName}"
+        },
         "ServiceTimeout": 120,
         "RoleArn": {
           "Fn::If": [
@@ -186,7 +190,8 @@
                     "aws:PrincipalArn": [
                       { "Fn::Sub": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${DeploymentHelperRoleName}" },
                       { "Fn::Sub": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${BackupServiceRoleName}" },
-                      { "Fn::Sub": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/OrganizationAccountAccessRole" }
+                      { "Fn::Sub": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/OrganizationAccountAccessRole" },
+                      { "Fn::Sub": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/*" }
                     ]
                   }
                 }
@@ -303,7 +308,9 @@
     "RestoreVault": {
       "Type": "Custom::TerraformDeployment",
       "Properties": {
-        "ServiceToken": { "Ref": "DeploymentHelperTopicArn" },
+        "ServiceToken": {
+          "Fn::Sub": "arn:${AWS::Partition}:sns:${AWS::Region}:${CentralAccountId}:${DeploymentHelperTopicName}"
+        },
         "ServiceTimeout": 120,
         "RoleArn": {
           "Fn::If": [

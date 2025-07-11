@@ -32,10 +32,9 @@ variable "central_deployment_helper_role_arn" {
   default     = ""
 }
 
-variable "central_deployment_helper_topic_arn" {
-  description = "The ARN of the central deployment helper SNS Topic."
+variable "central_deployment_helper_topic_name" {
+  description = "The name of the central deployment helper SNS Topic."
   type        = string
-  default     = ""
 }
 
 variable "central_account_resource_name_prefix" {
