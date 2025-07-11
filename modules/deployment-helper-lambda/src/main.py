@@ -78,6 +78,15 @@ def AWS__IAM__ServiceLinkedRole(event, context):
 
 
 def TerraformDeployment(event, context):
+    # In the event of a rollback CloudFormation sends a Delete event with the PhysicalResourceId not set to the previous state file.
+    if event["RequestType"] == "Delete" and not event["PhysicalResourceId"].startswith("s3://"):
+        cfnresponse.send(
+        event,
+        context,
+        cfnresponse.SUCCESS,
+        {},
+        physicalResourceId=event["PhysicalResourceId"]
+    )
     tf_dir = "/tmp/terraform"
     tf_binary = os.path.join(tf_dir, "terraform")
     work_dir = os.path.join(tf_dir, "work")
@@ -123,7 +132,9 @@ def TerraformDeployment(event, context):
     account_id = stack_id_parts[4]
     region = stack_id_parts[3]
     stack_ref = stack_id_parts[5]
-    terraform_state_key = f"stackset-deploy/{account_id}/{region}/{stack_ref}/{event['LogicalResourceId']}.tfstate"
+    terraform_state_key = "/".join(event.get("PhysicalResourceId").split("/")[3:]) if event.get("PhysicalResourceId") else f"stackset-deploy/{account_id}/{region}/{stack_ref}/{event['LogicalResourceId']}.tfstate"
+    state_object_uri = f"s3://{TERRAFORM_STATE_BUCKET}/{terraform_state_key}"
+    LOGGER.info(f'Using state file "{state_object_uri}".')
     with open(backend_file, "w") as f:
         f.write("terraform {\n")
         f.write('  backend "s3" {\n')
@@ -177,7 +188,7 @@ def TerraformDeployment(event, context):
         context,
         cfnresponse.SUCCESS,
         {},
-        physicalResourceId=f"s3://{TERRAFORM_STATE_BUCKET}/{terraform_state_key}",
+        physicalResourceId=event.get("PhysicalResourceId") or state_object_uri,
     )
 
 
