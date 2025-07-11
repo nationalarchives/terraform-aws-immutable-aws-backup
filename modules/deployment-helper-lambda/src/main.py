@@ -38,9 +38,9 @@ def boto3_client(service, role_arn=None):
 
 
 def AWS__IAM__ServiceLinkedRole(event, context):
-    iam_client = boto3_client("iam", event["ResourceProperties"]["RoleArn"])
     match event["RequestType"]:
         case "Create" | "Update":
+            iam_client = boto3_client("iam", event["ResourceProperties"]["RoleArn"])
             service_name = event["ResourceProperties"]["AWSServiceName"]
             try:
                 LOGGER.info(
