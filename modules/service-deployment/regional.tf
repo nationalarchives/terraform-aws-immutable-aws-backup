@@ -7,8 +7,8 @@ data "aws_organizations_organizational_unit_descendant_accounts" "target_account
 #
 # Module for deploying AWS Backup resources in a specific region.
 #
-module "region_deployment" {
-  source   = "../region-deployment"
+module "service_deployment_regional" {
+  source   = "../service-deployment-regional"
   for_each = toset(var.deployment_regions)
 
   region                 = each.value
