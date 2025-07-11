@@ -81,12 +81,13 @@ def TerraformDeployment(event, context):
     # In the event of a rollback CloudFormation sends a Delete event with the PhysicalResourceId not set to the previous state file.
     if event["RequestType"] == "Delete" and not event["PhysicalResourceId"].startswith("s3://"):
         cfnresponse.send(
-        event,
-        context,
-        cfnresponse.SUCCESS,
-        {},
-        physicalResourceId=event["PhysicalResourceId"]
-    )
+            event,
+            context,
+            cfnresponse.SUCCESS,
+            {},
+            physicalResourceId=event["PhysicalResourceId"]
+        )
+        return
     tf_dir = "/tmp/terraform"
     tf_binary = os.path.join(tf_dir, "terraform")
     work_dir = os.path.join(tf_dir, "work")
