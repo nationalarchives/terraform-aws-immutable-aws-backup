@@ -43,12 +43,18 @@ variable "central_account_resource_name_prefix" {
   type        = string
   default     = ""
 }
+
+variable "deployment_regions" {
+  description = "A list of regions to deploy the stack set to."
+  type        = list(string)
+  default     = []
+}
+
 variable "deployment_targets" {
   description = "A list of organizational unit IDs deploy the stack set to."
   type        = list(string)
   default     = []
 }
-
 variable "max_retention_days" {
   description = "The maximum number of days to retain backups."
   type        = number

@@ -1,7 +1,5 @@
-resource "aws_kms_key" "key" {
-  description         = "Key for ${var.service_name} backups. Used to encrypt the member account vaults and the central intermediate vault."
-  enable_key_rotation = true
-  policy = jsonencode({
+locals {
+  kms_key_policy = jsonencode({
     Version : "2012-10-17"
     Statement : concat([
       {
@@ -90,6 +88,13 @@ resource "aws_kms_key" "key" {
       var.additional_kms_statements
     )
   })
+}
+
+resource "aws_kms_key" "key" {
+  description         = "Key for ${var.service_name} backups. Used to encrypt the member account vaults and the central intermediate vault."
+  enable_key_rotation = true
+  multi_region        = true
+  policy              = local.kms_key_policy
 }
 
 resource "aws_kms_alias" "key" {
