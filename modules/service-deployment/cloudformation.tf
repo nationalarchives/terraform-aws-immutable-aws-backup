@@ -15,7 +15,7 @@ resource "aws_cloudformation_stack_set" "member_account_deployments" {
     BackupServiceRoleName            = local.member_account_backup_service_role_name
     BackupServiceRolePrincipals      = join(", ", [module.backup_ingest_sfn_role.role.arn])
     BackupVaultName                  = local.member_account_backup_vault_name
-    CentralAccountId                 = local.account_id
+    CentralAccountId                 = var.current.account_id
     CentralBackupVaultRegionlessArns = join(", ", local.central_backup_vault_regionless_arns)
     DeploymentHelperRoleArn          = var.central_deployment_helper_role_arn
     DeploymentHelperRoleName         = local.member_account_deployment_helper_role_name
@@ -25,7 +25,7 @@ resource "aws_cloudformation_stack_set" "member_account_deployments" {
     EventBusName                     = local.event_bus_name
     ForceDeployment                  = "1"
     KmsKeyId                         = aws_kms_key.key.key_id
-    OrganizationId                   = local.organization_id
+    OrganizationId                   = var.current.organization_id
     PrimaryRegion                    = var.deployment_regions[0]
     RestoreVaultName                 = local.member_account_restore_vault_name
   }

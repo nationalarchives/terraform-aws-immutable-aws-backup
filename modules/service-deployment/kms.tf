@@ -6,7 +6,7 @@ locals {
         Sid : "DelegateToIamForOwnerAccount",
         Effect : "Allow",
         Principal : {
-          AWS : "arn:${local.partition_id}:iam::${local.account_id}:root"
+          AWS : "arn:${var.current.partition}:iam::${var.current.account_id}:root"
         },
         Action : "kms:*",
         Resource : "*"
@@ -45,9 +45,9 @@ locals {
         Condition : {
           ArnLike : {
             "aws:PrincipalArn" : [
-              "arn:${local.partition_id}:iam::*:role/aws-service-role/backup.amazonaws.com/AWSServiceRoleForBackup",
-              "arn:${local.partition_id}:iam::*:role/${local.member_account_backup_service_role_name}",
-              "arn:${local.partition_id}:iam::*:role/${local.member_account_deployment_helper_role_name}"
+              "arn:${var.current.partition}:iam::*:role/aws-service-role/backup.amazonaws.com/AWSServiceRoleForBackup",
+              "arn:${var.current.partition}:iam::*:role/${local.member_account_backup_service_role_name}",
+              "arn:${var.current.partition}:iam::*:role/${local.member_account_deployment_helper_role_name}"
             ]
           },
           "ForAnyValue:StringLike" : {
@@ -70,9 +70,9 @@ locals {
         Condition : {
           ArnLike : {
             "aws:PrincipalArn" : [
-              "arn:${local.partition_id}:iam::*:role/aws-service-role/backup.amazonaws.com/AWSServiceRoleForBackup",
-              "arn:${local.partition_id}:iam::*:role/${local.member_account_backup_service_role_name}",
-              "arn:${local.partition_id}:iam::*:role/${local.member_account_deployment_helper_role_name}"
+              "arn:${var.current.partition}:iam::*:role/aws-service-role/backup.amazonaws.com/AWSServiceRoleForBackup",
+              "arn:${var.current.partition}:iam::*:role/${local.member_account_backup_service_role_name}",
+              "arn:${var.current.partition}:iam::*:role/${local.member_account_deployment_helper_role_name}"
             ]
           },
           Bool : {

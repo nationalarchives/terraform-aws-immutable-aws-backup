@@ -117,12 +117,3 @@ resource "aws_organizations_policy_attachment" "backup_policy" {
   policy_id = aws_organizations_policy.backup_policy.id
   target_id = each.key
 }
-
-
-
-
-resource "local_file" "backup_policy" {
-  filename = local.central_account_resource_name_prefix
-  content  = local.policy_content
-
-}

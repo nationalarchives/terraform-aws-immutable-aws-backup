@@ -16,7 +16,7 @@ module "backup_ingest_eventbridge_role" {
         Action : "sts:AssumeRole",
         Condition : {
           StringEquals : {
-            "aws:SourceAccount" : local.account_id
+            "aws:SourceAccount" : var.current.account_id
           }
         }
       }
@@ -28,7 +28,7 @@ module "backup_ingest_eventbridge_role" {
       {
         Effect : "Allow",
         Action : "states:StartExecution",
-        Resource : [for i in var.deployment_regions : "arn:${local.partition_id}:states:${i}:${local.account_id}:stateMachine:${local.ingest_state_machine_name}"]
+        Resource : [for i in var.deployment_regions : "arn:${var.current.partition}:states:${i}:${var.current.account_id}:stateMachine:${local.ingest_state_machine_name}"]
       }
     ]
   })
@@ -52,7 +52,7 @@ module "backup_ingest_sfn_role" {
         Action : "sts:AssumeRole",
         Condition : {
           StringEquals : {
-            "aws:SourceAccount" : local.account_id
+            "aws:SourceAccount" : var.current.account_id
           }
         }
       }

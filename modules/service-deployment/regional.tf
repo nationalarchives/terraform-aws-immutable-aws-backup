@@ -12,9 +12,9 @@ module "service_deployment_regional" {
   for_each = toset(var.deployment_regions)
 
   region                 = each.value
-  current_aws_account_id = local.account_id
-  current_aws_partition  = local.partition_id
-  current_aws_region     = local.region
+  current_aws_account_id = var.current.account_id
+  current_aws_partition  = var.current.partition
+  current_aws_region     = var.current.region
 
   member_account_backup_service_role_name = local.member_account_backup_service_role_name
   member_account_eventbridge_rule_name    = local.member_account_eventbridge_rule_name

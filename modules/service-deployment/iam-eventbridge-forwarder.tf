@@ -15,7 +15,7 @@ module "default_to_event_bus_role" {
       Action = "sts:AssumeRole",
       Condition = {
         StringEquals = {
-          "aws:SourceAccount" : local.account_id
+          "aws:SourceAccount" : var.current.account_id
         }
       }
     }]
@@ -26,7 +26,7 @@ module "default_to_event_bus_role" {
       {
         Effect : "Allow",
         Action : "events:PutEvents",
-        Resource : [for i in var.deployment_regions : "arn:${local.partition_id}:events:${i}:${local.account_id}:event-bus/${local.event_bus_name}"],
+        Resource : [for i in var.deployment_regions : "arn:${var.current.partition}:events:${i}:${var.current.account_id}:event-bus/${local.event_bus_name}"],
       }
     ]
   })

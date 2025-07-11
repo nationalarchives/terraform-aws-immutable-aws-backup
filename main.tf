@@ -35,6 +35,12 @@ module "service_deployment" {
   restores_enabled   = each.value.restores_enabled
   retained_vaults    = each.value.retained_vaults
 
+  current = {
+    account_id      = local.account_id
+    organization_id = local.organization_id
+    partition       = local.partition_id
+    region          = local.region
+  }
   central_account_resource_name_prefix              = var.central_account_resource_name_prefix
   central_backup_service_linked_role_arn            = local.backup_service_linked_role_arn
   central_backup_service_role_arn                   = module.backup_service_role.role.arn

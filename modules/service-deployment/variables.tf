@@ -43,6 +43,16 @@ variable "central_account_resource_name_prefix" {
   default     = ""
 }
 
+variable "current" {
+  description = "The current AWS account ID, organization, partition, and region."
+  type = object({
+    account_id : string
+    organization_id : string
+    partition : string
+    region : string
+  })
+}
+
 variable "deployment_regions" {
   description = "A list of regions to deploy the stack set to."
   type        = list(string)
