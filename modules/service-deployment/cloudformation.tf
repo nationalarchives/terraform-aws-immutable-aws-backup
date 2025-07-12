@@ -4,7 +4,7 @@ resource "aws_cloudformation_stack_set" "member_account_deployments" {
   capabilities     = ["CAPABILITY_NAMED_IAM"]
   permission_model = "SERVICE_MANAGED"
   call_as          = "DELEGATED_ADMIN"
-  template_body    = file("${path.module}/templates/stackset.json")
+  template_body    = file("${path.module}/templates/stackset.cfn.json")
 
   parameters = {
     BackupServiceLinkedRoleArn  = var.central_backup_service_linked_role_arn

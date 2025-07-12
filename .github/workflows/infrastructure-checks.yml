@@ -1,0 +1,70 @@
+name: Infrastructure Checks
+on:
+  push:
+    paths:
+      - "**/*.tf"
+      - "**/*.cfn.json"
+      - ".github/workflows/infrastructure-checks.yml"
+  workflow_dispatch:
+
+jobs:
+  terraform_validation:
+    name: Validate Terraform Configuration
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@6c439dc8bdf85cadbbce9ed30d1c7b959517bc49 # v2.12.2
+        with:
+          egress-policy: audit
+      - name: Checkout Repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.4.2
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
+        with:
+          terraform_version: 1.9.0
+      - name: Terraform Format Check
+        run: terraform fmt -check=true -recursive
+      - name: Terraform Init
+        run: terraform init -backend=false
+      - name: Terraform Validate
+        run: terraform validate
+
+  tflint:
+    name: Run TFLint
+    needs:
+      - terraform_validation
+    uses: ./.github/workflows/tflint.yaml
+
+  cloudformation_validation:
+    name: Validate CloudFormation Templates
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@6c439dc8bdf85cadbbce9ed30d1c7b959517bc49 # v2.12.2
+        with:
+          egress-policy: audit
+      - name: Checkout Repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.4.2
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@b47578312673ae6fa5b5096b330d9fbac3d116df # v4.2.1
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN}}
+          aws-region: ${{ secrets.AWS_REGION }}
+      - name: Validate CloudFormation Templates
+        run: |
+          FAILED=0
+          while IFS= read -r -d '' template; do
+            echo "Validating $template"
+            if ! aws cloudformation validate-template --template-body "file://$template" > /dev/null; then
+              FAILED=1
+            fi
+          done < <(find . -name "*.cfn.json" -print0)
+          if [ "$FAILED" = 1 ]; then
+            echo "One or more CloudFormation templates failed validation."
+            exit 1
+          fi
