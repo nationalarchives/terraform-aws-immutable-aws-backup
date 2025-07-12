@@ -21,21 +21,20 @@ locals {
   deployment_ou_paths_including_children = [for i in var.deployment_targets : "${var.current.organization_id}/*/${i}/*"]
 
   # Backup Vaults
-  current_vault_configuration                = join("-", [coalesce(var.min_retention_days, "0"), coalesce(var.max_retention_days, "0")])
-  intermediate_vault_name                    = "${local.central_account_resource_name_prefix}-intermediate"
-  lag_vault_prefix                           = "${local.central_account_resource_name_prefix}-lag-"
-  lag_vaults                                 = concat([for i in var.retained_vaults : "${i.min_retention_days}-${i.max_retention_days}" if i["use_logically_air_gapped_vault"]], local.create_lag_resources ? [local.current_vault_configuration] : [])
-  standard_vault_prefix                      = "${local.central_account_resource_name_prefix}-standard-"
-  standard_vaults                            = concat([for i in var.retained_vaults : "${i.min_retention_days}-${i.max_retention_days}"], [local.current_vault_configuration])
-  central_backup_vault_arn_prefix_template   = "arn:${var.current.partition}:backup:<REGION>:${var.current.account_id}:backup-vault:"
-  intermediate_vault_arn_template            = join("", [local.central_backup_vault_arn_prefix_template, local.intermediate_vault_name])
-  current_lag_vault_arn_template             = join("", [local.central_backup_vault_arn_prefix_template, local.lag_vault_prefix, local.current_vault_configuration])
-  current_standard_vault_arn_template        = join("", [local.central_backup_vault_arn_prefix_template, local.standard_vault_prefix, local.current_vault_configuration])
-  central_backup_vault_regionless_arn_prefix = replace(local.central_backup_vault_arn_prefix_template, "<REGION>", "*")
-  central_backup_vault_regionless_arns = flatten([
-    join("", [local.central_backup_vault_regionless_arn_prefix, local.intermediate_vault_name]),
-    [for i in local.standard_vaults : join("", [local.central_backup_vault_regionless_arn_prefix, local.standard_vault_prefix, i])],
-    [for i in local.lag_vaults : join("", [local.central_backup_vault_regionless_arn_prefix, local.lag_vault_prefix, i])]
+  current_vault_configuration              = join("-", [coalesce(var.min_retention_days, "0"), coalesce(var.max_retention_days, "0")])
+  intermediate_vault_name                  = "${local.central_account_resource_name_prefix}-intermediate"
+  lag_vault_prefix                         = "${local.central_account_resource_name_prefix}-lag-"
+  lag_vaults                               = concat([for i in var.retained_vaults : "${i.min_retention_days}-${i.max_retention_days}" if i["use_logically_air_gapped_vault"]], local.create_lag_resources ? [local.current_vault_configuration] : [])
+  standard_vault_prefix                    = "${local.central_account_resource_name_prefix}-standard-"
+  standard_vaults                          = concat([for i in var.retained_vaults : "${i.min_retention_days}-${i.max_retention_days}"], [local.current_vault_configuration])
+  central_backup_vault_arn_prefix_template = "arn:${var.current.partition}:backup:<REGION>:${var.current.account_id}:backup-vault:"
+  intermediate_vault_arn_template          = join("", [local.central_backup_vault_arn_prefix_template, local.intermediate_vault_name])
+  current_lag_vault_arn_template           = join("", [local.central_backup_vault_arn_prefix_template, local.lag_vault_prefix, local.current_vault_configuration])
+  current_standard_vault_arn_template      = join("", [local.central_backup_vault_arn_prefix_template, local.standard_vault_prefix, local.current_vault_configuration])
+  central_backup_vault_arns_template = flatten([
+    join("", [local.central_backup_vault_arn_prefix_template, local.intermediate_vault_name]),
+    [for i in local.standard_vaults : join("", [local.central_backup_vault_arn_prefix_template, local.standard_vault_prefix, i])],
+    [for i in local.lag_vaults : join("", [local.central_backup_vault_arn_prefix_template, local.lag_vault_prefix, i])]
   ])
-
+  central_backup_vault_arns = flatten([for region in var.deployment_regions : [for i in local.central_backup_vault_arns_template : replace(i, "<REGION>", region)]])
 }

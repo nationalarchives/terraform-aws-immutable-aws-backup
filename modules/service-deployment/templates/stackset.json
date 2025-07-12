@@ -18,9 +18,9 @@
       "Type": "String",
       "Description": "The AWS Account ID of the central account."
     },
-    "CentralBackupVaultRegionlessArns": {
+    "CentralBackupVaultArns": {
       "Type": "List<String>",
-      "Description": "List of ARNs with a wildcard region of the central backup vaults to which this account will send backups to."
+      "Description": "List of ARNs of the central backup vaults to which this account will send backups to."
     },
     "EventBusName": {
       "Type": "String"
@@ -283,8 +283,8 @@
           "detail": {
             "$or": [
               { "backupVaultName": [{ "Ref": "BackupVaultName" }] },
-              { "sourceBackupVaultArn": { "Ref": "CentralBackupVaultRegionlessArns" } },
-              { "destinationBackupVaultArn": { "Ref": "CentralBackupVaultRegionlessArns" } }
+              { "sourceBackupVaultArn": { "Ref": "CentralBackupVaultArns" } },
+              { "destinationBackupVaultArn": { "Ref": "CentralBackupVaultArns" } }
             ]
           }
         },
