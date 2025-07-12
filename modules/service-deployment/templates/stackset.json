@@ -100,7 +100,10 @@
               "Statement": [
                 {
                   "Effect": "Allow",
-                  "Action": "backup:UpdateRecoveryPointLifecycle",
+                  "Action": [
+                    "backup:UpdateRecoveryPointLifecycle",
+                    "backup:ListTags"
+                  ],
                   "Resource": "*"
                 }
               ]
