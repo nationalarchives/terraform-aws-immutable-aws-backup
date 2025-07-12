@@ -44,11 +44,11 @@ extra:
 
 nav:
   - Home: index.md
-  - Concept: concept.md
+  - Why use this module?: why-use-this-module.md
   - Architecture: architecture.md
-  - Usage: 
-    - Using the module: usage.md
-    - Organizations policy: org-policy.md
+  - Usage:
+      - Using the module: usage.md
+      - Organizations policy: org-policy.md
 
 plugins:
   - social

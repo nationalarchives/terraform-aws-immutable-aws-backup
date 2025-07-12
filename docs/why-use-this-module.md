@@ -1,4 +1,4 @@
-# Module Concept
+# Why use this module?
 
 [AWS Backup](https://docs.aws.amazon.com/aws-backup/latest/devguide/whatisbackup.html) is a fully-managed service that makes it easy to centralize and automate data protection across AWS services. AWS Backup allows the implementation of Backup Plans (Policies when applied to an AWS Organization) to manage the backing up of resources within AWS.
 
