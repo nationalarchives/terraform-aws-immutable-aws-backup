@@ -1,4 +1,5 @@
 resource "aws_cloudwatch_log_group" "lambda" {
+  region            = var.region
   name              = "/aws/lambda/${var.lambda_function_name}"
   retention_in_days = 90
 }
@@ -12,8 +13,9 @@ data "archive_file" "lambda_code" {
 }
 
 resource "aws_lambda_function" "lambda" {
+  region           = var.region
   function_name    = var.lambda_function_name
-  role             = module.lambda_role.role.arn
+  role             = var.lambda_role_arn
   handler          = "main.handler"
   runtime          = "python3.12"
   source_code_hash = data.archive_file.lambda_code.output_base64sha256
@@ -35,6 +37,7 @@ resource "aws_lambda_function" "lambda" {
 }
 
 resource "aws_lambda_permission" "lambda" {
+  region        = var.region
   statement_id  = "SNSInvokePermission"
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.lambda.function_name
@@ -43,6 +46,7 @@ resource "aws_lambda_permission" "lambda" {
 }
 
 resource "aws_sns_topic_subscription" "lambda" {
+  region    = var.region
   topic_arn = aws_sns_topic.lambda_invoke.arn
   protocol  = "lambda"
   endpoint  = aws_lambda_function.lambda.arn

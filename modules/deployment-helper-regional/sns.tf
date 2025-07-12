@@ -1,9 +1,11 @@
 resource "aws_sns_topic" "lambda_invoke" {
-  name = var.lambda_function_name
+  region = var.region
+  name   = var.lambda_function_name
 }
 
 resource "aws_sns_topic_policy" "lambda_invoke" {
-  arn = aws_sns_topic.lambda_invoke.arn
+  region = var.region
+  arn    = aws_sns_topic.lambda_invoke.arn
   policy = jsonencode({
     Version : "2012-10-17"
     Statement : [
@@ -16,11 +18,11 @@ resource "aws_sns_topic_policy" "lambda_invoke" {
         Resource : aws_sns_topic.lambda_invoke.arn,
         Condition : {
           StringEquals : {
-            "aws:PrincipalOrgId" : var.organization_id
+            "aws:PrincipalOrgId" : var.current.organization_id
           },
           ArnLike : {
             "aws:PrincipalArn" : [
-              "arn:${local.partition_id}:iam::*:role/stacksets-exec-*"
+              "arn:${var.current.partition}:iam::*:role/stacksets-exec-*"
             ]
           }
         }
