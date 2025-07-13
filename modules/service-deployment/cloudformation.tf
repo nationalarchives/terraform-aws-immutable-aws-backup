@@ -8,7 +8,12 @@ resource "aws_cloudformation_stack_set" "member_account_deployments" {
   capabilities     = ["CAPABILITY_NAMED_IAM"]
   permission_model = "SERVICE_MANAGED"
   call_as          = "DELEGATED_ADMIN"
-  template_body    = file("${path.module}/templates/stackset.json")
+
+  # Try to do as much as possible in native CloudFormation, but some things, like dynamic lists, are only possible in Terraform.
+  # jsonencode(jsondecode(...)) used to minify the file.
+  template_body = jsonencode(jsondecode(templatefile("${path.module}/templates/stackset.json.tftpl", {
+    central_backup_vault_arn_templates = [for i in local.central_backup_vault_arns_template : { "Fn::Sub" : replace(replace(i, "<REGION>", "$${AWS::Region}"), var.current.account_id, "$${CentralAccountId}") }],
+  })))
 
   parameters = {
     BackupServiceLinkedRoleArn  = var.central_backup_service_linked_role_arn
@@ -16,7 +21,6 @@ resource "aws_cloudformation_stack_set" "member_account_deployments" {
     BackupServiceRolePrincipals = join(", ", [module.backup_ingest_sfn_role.role.arn])
     BackupVaultName             = local.member_account_backup_vault_name
     CentralAccountId            = var.current.account_id
-    CentralBackupVaultArns      = join(", ", local.central_backup_vault_arns)
     DeploymentHelperRoleArn     = var.central_deployment_helper_role_arn
     DeploymentHelperRoleName    = local.member_account_deployment_helper_role_name
     DeploymentHelperTopicName   = var.central_deployment_helper_topic_name

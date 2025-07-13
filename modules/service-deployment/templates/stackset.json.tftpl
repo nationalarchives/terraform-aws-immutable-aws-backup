@@ -18,10 +18,6 @@
       "Type": "String",
       "Description": "The AWS Account ID of the central account."
     },
-    "CentralBackupVaultArns": {
-      "Type": "List<String>",
-      "Description": "List of ARNs of the central backup vaults to which this account will send backups to."
-    },
     "EventBusName": {
       "Type": "String"
     },
@@ -132,7 +128,7 @@
       "Condition": "CreateGlobalResources",
       "Properties": {
         "ServiceToken": {
-          "Fn::Sub": "arn:${AWS::Partition}:sns:${AWS::Region}:${CentralAccountId}:${DeploymentHelperTopicName}"
+          "Fn::Sub": "arn:$${AWS::Partition}:sns:$${AWS::Region}:$${CentralAccountId}:$${DeploymentHelperTopicName}"
         },
         "ServiceTimeout": 120,
         "RoleArn": { "Fn::GetAtt": ["DeploymentHelperRole", "Arn"] },
@@ -143,14 +139,14 @@
       "Type": "Custom::TerraformDeployment",
       "Properties": {
         "ServiceToken": {
-          "Fn::Sub": "arn:${AWS::Partition}:sns:${AWS::Region}:${CentralAccountId}:${DeploymentHelperTopicName}"
+          "Fn::Sub": "arn:$${AWS::Partition}:sns:$${AWS::Region}:$${CentralAccountId}:$${DeploymentHelperTopicName}"
         },
         "ServiceTimeout": 120,
         "RoleArn": {
           "Fn::If": [
             "CreateGlobalResources",
             { "Fn::GetAtt": ["DeploymentHelperRole", "Arn"] },
-            { "Fn::Sub": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${DeploymentHelperRoleName}" }
+            { "Fn::Sub": "arn:$${AWS::Partition}:iam::$${AWS::AccountId}:role/$${DeploymentHelperRoleName}" }
           ]
         },
         "Code": "./terraform-stacks/AWS_Backup_BackupVault.tf",
@@ -160,7 +156,7 @@
           },
           "ForceDestroy": true,
           "EncryptionKeyArn": {
-            "Fn::Sub": "arn:${AWS::Partition}:kms:${AWS::Region}:${CentralAccountId}:key/${KmsKeyId}"
+            "Fn::Sub": "arn:$${AWS::Partition}:kms:$${AWS::Region}:$${CentralAccountId}:key/$${KmsKeyId}"
           },
           "AccessPolicy": {
             "Version": "2012-10-17",
@@ -188,10 +184,10 @@
                 "Condition": {
                   "ArnNotLike": {
                     "aws:PrincipalArn": [
-                      { "Fn::Sub": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${DeploymentHelperRoleName}" },
-                      { "Fn::Sub": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${BackupServiceRoleName}" },
-                      { "Fn::Sub": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/OrganizationAccountAccessRole" },
-                      { "Fn::Sub": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/*" }
+                      { "Fn::Sub": "arn:$${AWS::Partition}:iam::$${AWS::AccountId}:role/$${DeploymentHelperRoleName}" },
+                      { "Fn::Sub": "arn:$${AWS::Partition}:iam::$${AWS::AccountId}:role/$${BackupServiceRoleName}" },
+                      { "Fn::Sub": "arn:$${AWS::Partition}:iam::$${AWS::AccountId}:role/OrganizationAccountAccessRole" },
+                      { "Fn::Sub": "arn:$${AWS::Partition}:iam::$${AWS::AccountId}:role/*" }
                     ]
                   }
                 }
@@ -247,7 +243,7 @@
               "Condition": {
                 "ArnEquals": {
                   "aws:SourceArn": {
-                    "Fn::Sub": "arn:${AWS::Partition}:events:${AWS::Region}:${AWS::AccountId}:rule/${EventBridgeRuleName}"
+                    "Fn::Sub": "arn:$${AWS::Partition}:events:$${AWS::Region}:$${AWS::AccountId}:rule/$${EventBridgeRuleName}"
                   }
                 }
               }
@@ -264,7 +260,7 @@
                   "Effect": "Allow",
                   "Action": ["events:PutEvents"],
                   "Resource": {
-                    "Fn::Sub": "arn:${AWS::Partition}:events:${AWS::Region}:${CentralAccountId}:event-bus/${EventBusName}"
+                    "Fn::Sub": "arn:$${AWS::Partition}:events:$${AWS::Region}:$${CentralAccountId}:event-bus/$${EventBusName}"
                   }
                 }
               ]
@@ -283,22 +279,22 @@
           "detail": {
             "$or": [
               { "backupVaultName": [{ "Ref": "BackupVaultName" }] },
-              { "sourceBackupVaultArn": { "Ref": "CentralBackupVaultArns" } },
-              { "destinationBackupVaultArn": { "Ref": "CentralBackupVaultArns" } }
+              { "sourceBackupVaultArn": ${jsonencode(central_backup_vault_arn_templates)} },
+              { "destinationBackupVaultArn": ${jsonencode(central_backup_vault_arn_templates)} }
             ]
           }
         },
         "Targets": [
           {
             "Arn": {
-              "Fn::Sub": "arn:${AWS::Partition}:events:${AWS::Region}:${CentralAccountId}:event-bus/${EventBusName}"
+              "Fn::Sub": "arn:$${AWS::Partition}:events:$${AWS::Region}:$${CentralAccountId}:event-bus/$${EventBusName}"
             },
             "Id": "SendToCentralBackupEventBus",
             "RoleArn": {
               "Fn::If": [
                 "CreateGlobalResources",
                 { "Fn::GetAtt": ["EventBridgeRole", "Arn"] },
-                { "Fn::Sub": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${EventBridgeRuleName}" }
+                { "Fn::Sub": "arn:$${AWS::Partition}:iam::$${AWS::AccountId}:role/$${EventBridgeRuleName}" }
               ]
             }
           }
@@ -309,14 +305,14 @@
       "Type": "Custom::TerraformDeployment",
       "Properties": {
         "ServiceToken": {
-          "Fn::Sub": "arn:${AWS::Partition}:sns:${AWS::Region}:${CentralAccountId}:${DeploymentHelperTopicName}"
+          "Fn::Sub": "arn:$${AWS::Partition}:sns:$${AWS::Region}:$${CentralAccountId}:$${DeploymentHelperTopicName}"
         },
         "ServiceTimeout": 120,
         "RoleArn": {
           "Fn::If": [
             "CreateGlobalResources",
             { "Fn::GetAtt": ["DeploymentHelperRole", "Arn"] },
-            { "Fn::Sub": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${DeploymentHelperRoleName}" }
+            { "Fn::Sub": "arn:$${AWS::Partition}:iam::$${AWS::AccountId}:role/$${DeploymentHelperRoleName}" }
           ]
         },
         "Code": "./terraform-stacks/AWS_Backup_BackupVault.tf",

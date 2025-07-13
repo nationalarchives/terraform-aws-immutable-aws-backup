@@ -36,5 +36,4 @@ locals {
     [for i in local.standard_vaults : join("", [local.central_backup_vault_arn_prefix_template, local.standard_vault_prefix, i])],
     [for i in local.lag_vaults : join("", [local.central_backup_vault_arn_prefix_template, local.lag_vault_prefix, i])]
   ])
-  central_backup_vault_arns = flatten([for region in var.deployment_regions : [for i in local.central_backup_vault_arns_template : replace(i, "<REGION>", region)]])
 }
