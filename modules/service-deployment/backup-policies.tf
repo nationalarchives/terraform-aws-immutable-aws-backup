@@ -44,17 +44,17 @@ locals {
 
   plans = merge(
     # Pass through the plans as defined by the caller
-    { for k, v in var.plans : "${k}-to-standard" => merge(v, { lag_plan : false, continuous_plan : false, tag_value : k }) },
+    { for k, v in var.plans : "${k}-std" => merge(v, { lag_plan : false, continuous_plan : false, tag_value : k }) },
     # If using a Logically Air Gapped Vault, we need separate plans for the resource selections
-    local.create_lag_resources ? { for k, v in var.plans : "${k}-to-lag" => merge(v, { lag_plan : true, continuous_plan : false, tag_value : k }) if v["use_logically_air_gapped_vault"] } : {},
+    local.create_lag_resources ? { for k, v in var.plans : "${k}-lag" => merge(v, { lag_plan : true, continuous_plan : false, tag_value : k }) if v["use_logically_air_gapped_vault"] } : {},
     # If creating continuous backups, we need separate plans for the continuous backups - different lifecycle and they need to exist before the rules that snapshot from them.
-    { for k, v in var.plans : "${k}-continuous" => merge(v, { lag_plan : false, continuous_plan : true, tag_value : k, start_backup_window_minutes : null, complete_backup_window_minutes : null, rules : [{ name : "${k}-continuous-backups", schedule_expression : v["continuous_backup_schedule_expression"], delete_after_days : 35, start_backup_window_minutes : null, complete_backup_window_minutes : null }] }) if v["create_continuous_backups"] || v["snapshot_from_continuous_backups"] },
+    { for k, v in var.plans : "${k}-pitr" => merge(v, { lag_plan : false, continuous_plan : true, tag_value : k, start_backup_window_minutes : null, complete_backup_window_minutes : null, rules : [{ name : "${k}-continuous-backups", schedule_expression : v["continuous_backup_schedule_expression"], delete_after_days : 35, start_backup_window_minutes : null, complete_backup_window_minutes : null }] }) if v["create_continuous_backups"] || v["snapshot_from_continuous_backups"] },
   )
 
   policy_content = jsonencode({
     plans : merge([
       for region in local.plan_regions : {
-        for plan_name, plan in local.plans : join("-", [plan_name, region["shortname"]]) => {
+        for plan_name, plan in local.plans : join("-", [local.central_account_resource_name_prefix, plan_name, region["shortname"]]) => {
           "regions" : { "@@assign" : [region["name"]] },
           "rules" : { for rule_idx, rule in plan["rules"] : coalesce(rule["name"], rule_idx) =>
             # Nested k, v for expression filters out null values (logic below)
