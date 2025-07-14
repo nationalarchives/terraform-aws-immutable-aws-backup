@@ -22,7 +22,7 @@ module "deployment_helper" {
   terraform_state_bucket_name                       = var.terraform_state_bucket_name
 }
 
-module "service_deployment" {
+module "deployment" {
   source   = "./modules/service-deployment"
   for_each = var.deployments
 
