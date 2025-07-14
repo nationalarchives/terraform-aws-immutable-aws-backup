@@ -21,6 +21,7 @@ module "lambda_role" {
       {
         Effect : "Allow"
         Action : [
+          "s3:GetBucketLocation",
           "s3:ListBucket"
         ]
         Resource : "arn:${var.current.partition}:s3:::${var.terraform_state_bucket_name}"
