@@ -130,6 +130,8 @@ def TerraformDeployment(event, context):
     # Determine state S3 bucket region
     LOGGER.info(f'Getting location for state bucket.')
     state_bucket_region = boto3_client("s3").get_bucket_location(Bucket=TERRAFORM_STATE_BUCKET).get("LocationConstraint")
+    state_bucket_region = state_bucket_region if state_bucket_region else "us-east-1"
+    state_bucket_region = "eu-west-1" if state_bucket_region == "EU" else state_bucket_region
     # Write backend file
     backend_file = os.path.join(work_dir, "_backend.tf")
     stack_id_parts = event["StackId"].split(":")
