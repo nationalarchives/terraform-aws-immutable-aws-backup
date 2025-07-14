@@ -12,7 +12,8 @@ resource "aws_cloudformation_stack_set" "member_account_deployments" {
   # Try to do as much as possible in native CloudFormation, but some things, like dynamic lists, are only possible in Terraform.
   # jsonencode(jsondecode(...)) used to minify the file.
   template_body = jsonencode(jsondecode(templatefile("${path.module}/templates/stackset.json.tftpl", {
-    central_backup_vault_arn_templates = [for i in local.central_backup_vault_arns_template : { "Fn::Sub" : replace(replace(i, "<REGION>", "$${AWS::Region}"), var.current.account_id, "$${CentralAccountId}") }],
+    central_backup_vault_arn_templates    = [for i in local.central_backup_vault_arns_template : { "Fn::Sub" : replace(replace(i, "<REGION>", "$${AWS::Region}"), var.current.account_id, "$${CentralAccountId}") }],
+    member_eventbridge_rule_arn_templates = [for i in var.deployment_regions : { "Fn::Sub" : "arn:${var.current.partition}:events:${i}:$${AWS::AccountId}:rule/${local.member_account_eventbridge_rule_name}" }],
   })))
 
   parameters = {
@@ -24,7 +25,6 @@ resource "aws_cloudformation_stack_set" "member_account_deployments" {
     DeploymentHelperRoleArn     = var.central_deployment_helper_role_arn
     DeploymentHelperRoleName    = local.member_account_deployment_helper_role_name
     DeploymentHelperTopicName   = var.central_deployment_helper_topic_name
-    DeploymentRegions           = join(", ", var.deployment_regions)
     EventBridgeRuleName         = local.member_account_eventbridge_rule_name
     EventBusName                = local.event_bus_name
     ForceDeployment             = "1"

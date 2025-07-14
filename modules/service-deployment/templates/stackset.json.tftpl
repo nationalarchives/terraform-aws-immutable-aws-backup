@@ -39,13 +39,9 @@
       "Type": "String",
       "Description": "Name of the role to create to be assumed in the member account by the deployment helper Lambda function."
     },
-    "DeploymentRegions": {
-      "Type": "List<String>",
-      "Description": "List of regions this stack is being deployed to, used to implement least privilege IAM "
-    },
     "PrimaryRegion": {
       "Type": "String",
-      "Description": "One of the regions in DeploymentRegions, used to determine the global resources (e.g. IAM) will be created."
+      "Description": "One of the regions the stack is being deployed to, used to determine the global resources (e.g. IAM) will be created."
     },
     "RestoreVaultName": {
       "Type": "String"
@@ -186,8 +182,7 @@
                     "aws:PrincipalArn": [
                       { "Fn::Sub": "arn:$${AWS::Partition}:iam::$${AWS::AccountId}:role/$${DeploymentHelperRoleName}" },
                       { "Fn::Sub": "arn:$${AWS::Partition}:iam::$${AWS::AccountId}:role/$${BackupServiceRoleName}" },
-                      { "Fn::Sub": "arn:$${AWS::Partition}:iam::$${AWS::AccountId}:role/OrganizationAccountAccessRole" },
-                      { "Fn::Sub": "arn:$${AWS::Partition}:iam::$${AWS::AccountId}:role/*" }
+                      { "Fn::Sub": "arn:$${AWS::Partition}:iam::$${AWS::AccountId}:role/OrganizationAccountAccessRole" }
                     ]
                   }
                 }
@@ -242,9 +237,7 @@
               "Action": ["sts:AssumeRole"],
               "Condition": {
                 "ArnEquals": {
-                  "aws:SourceArn": {
-                    "Fn::Sub": "arn:$${AWS::Partition}:events:$${AWS::Region}:$${AWS::AccountId}:rule/$${EventBridgeRuleName}"
-                  }
+                  "aws:SourceArn": ${jsonencode(member_eventbridge_rule_arn_templates)}
                 }
               }
             }
@@ -260,7 +253,7 @@
                   "Effect": "Allow",
                   "Action": ["events:PutEvents"],
                   "Resource": {
-                    "Fn::Sub": "arn:$${AWS::Partition}:events:$${AWS::Region}:$${CentralAccountId}:event-bus/$${EventBusName}"
+                    "Fn::Sub": "arn:$${AWS::Partition}:events:*:$${CentralAccountId}:event-bus/$${EventBusName}"
                   }
                 }
               ]
@@ -320,7 +313,42 @@
           "BackupVaultName": {
             "Ref": "RestoreVaultName"
           },
-          "ForceDestroy": true
+          "ForceDestroy": true,
+          "AccessPolicy": {
+            "Version": "2012-10-17",
+            "Statement": [
+              {
+                "Effect": "Deny",
+                "Principal": {
+                  "AWS": "*"
+                },
+                "Action": [
+                  "backup:CopyIntoBackupVault",
+                  "backup:DeleteBackupVault",
+                  "backup:DeleteBackupVaultAccessPolicy",
+                  "backup:DeleteBackupVaultLockConfiguration",
+                  "backup:DeleteBackupVaultNotifications",
+                  "backup:DeleteRecoveryPoint",
+                  "backup:DisassociateBackupVaultMpaApprovalTeam",
+                  "backup:PutBackupVaultAccessPolicy",
+                  "backup:PutBackupVaultLockConfiguration",
+                  "backup:PutBackupVaultNotifications",
+                  "backup:StartBackupJob",
+                  "backup:UpdateRecoveryPointLifecycle"
+                ],
+                "Resource": "*",
+                "Condition": {
+                  "ArnNotLike": {
+                    "aws:PrincipalArn": [
+                      { "Fn::Sub": "arn:$${AWS::Partition}:iam::$${AWS::AccountId}:role/$${DeploymentHelperRoleName}" },
+                      { "Fn::Sub": "arn:$${AWS::Partition}:iam::$${AWS::AccountId}:role/$${BackupServiceRoleName}" },
+                      { "Fn::Sub": "arn:$${AWS::Partition}:iam::$${AWS::AccountId}:role/OrganizationAccountAccessRole" }
+                    ]
+                  }
+                }
+              }
+            ]
+          }
         }
       }
     }

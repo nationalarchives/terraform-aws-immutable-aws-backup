@@ -2,7 +2,7 @@ locals {
   local_retention_days_tag        = "BackupLocalRetentionDays"
   intermediate_retention_days_tag = "BackupIntermediateRetentionDays"
 
-  ingest_state_machine_name = join("", [var.central_account_resource_name_prefix, "-backup-ingest"])
+  ingest_state_machine_name = join("", [var.central_account_resource_name_prefix, "backup-ingest"])
 
   central_account_resource_name_prefix = "${var.central_account_resource_name_prefix}${var.service_name}"
   event_bus_name                       = local.central_account_resource_name_prefix
