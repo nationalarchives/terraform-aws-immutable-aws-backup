@@ -22,7 +22,8 @@ data "aws_iam_role" "potential_backup_service_linked_role" {
 resource "aws_iam_service_linked_role" "backup_service_linked_role" {
   count = try(
     lookup(data.aws_iam_role.potential_backup_service_linked_role[0].tags, "terraform", null) == "true" &&
-    lookup(data.aws_iam_role.potential_backup_service_linked_role[0].tags, "deployment_region", null) == local.region ? 1 : 0, 1
+    lookup(data.aws_iam_role.potential_backup_service_linked_role[0].tags, "deployment_region", null) == local.region &&
+    lookup(data.aws_iam_role.potential_backup_service_linked_role[0].tags, "deployment_identifier", null) == local.deployment_identifier ? 1 : 0, 1
   )
 
   aws_service_name = "backup.amazonaws.com"
