@@ -17,9 +17,9 @@ variable "lambda_function_name" {
   type        = string
 }
 
-variable "member_account_deployment_helper_role_arn_pattern" {
-  description = "The pattern to use to restrict role assumption to the member account Deployment Helper roles."
-  type        = string
+variable "member_account_deployment_helper_role_arn_patterns" {
+  description = "The patterns to use to restrict role assumption to the member account Deployment Helper roles."
+  type        = list(string)
 }
 
 variable "terraform_state_bucket_name" {

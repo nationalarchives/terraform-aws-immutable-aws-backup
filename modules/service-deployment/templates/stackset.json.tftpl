@@ -35,9 +35,9 @@
       "Type": "String",
       "Description": "ARN of the central deployment helper Lambda function role, used in the trust policy of the member account Deployment Helper role."
     },
-    "DeploymentHelperRoleName": {
+    "DeploymentHelperRoleNamePrefix": {
       "Type": "String",
-      "Description": "Name of the role to create to be assumed in the member account by the deployment helper Lambda function."
+      "Description": "Prefix for the name of the role to create to be assumed in the member account by the deployment helper Lambda function, will be suffixed with the current region."
     },
     "PrimaryRegion": {
       "Type": "String",
@@ -138,13 +138,7 @@
           "Fn::Sub": "arn:$${AWS::Partition}:sns:$${AWS::Region}:$${CentralAccountId}:$${DeploymentHelperTopicName}"
         },
         "ServiceTimeout": 120,
-        "RoleArn": {
-          "Fn::If": [
-            "CreateGlobalResources",
-            { "Fn::GetAtt": ["DeploymentHelperRole", "Arn"] },
-            { "Fn::Sub": "arn:$${AWS::Partition}:iam::$${AWS::AccountId}:role/$${DeploymentHelperRoleName}" }
-          ]
-        },
+        "RoleArn": { "Fn::GetAtt": ["DeploymentHelperRole", "Arn"] },
         "Code": "./terraform-stacks/AWS_Backup_BackupVault.tf",
         "TFVARS": {
           "BackupVaultName": {
@@ -180,7 +174,7 @@
                 "Condition": {
                   "ArnNotLike": {
                     "aws:PrincipalArn": [
-                      { "Fn::Sub": "arn:$${AWS::Partition}:iam::$${AWS::AccountId}:role/$${DeploymentHelperRoleName}" },
+                      { "Fn::GetAtt": ["DeploymentHelperRole", "Arn"] },
                       { "Fn::Sub": "arn:$${AWS::Partition}:iam::$${AWS::AccountId}:role/$${BackupServiceRoleName}" },
                       { "Fn::Sub": "arn:$${AWS::Partition}:iam::$${AWS::AccountId}:role/OrganizationAccountAccessRole" }
                     ]
@@ -194,11 +188,8 @@
     },
     "DeploymentHelperRole": {
       "Type": "AWS::IAM::Role",
-      "Condition": "CreateGlobalResources",
       "Properties": {
-        "RoleName": {
-          "Ref": "DeploymentHelperRoleName"
-        },
+        "RoleName": { "Fn::Sub": "$${DeploymentHelperRoleNamePrefix}$${AWS::Region}" },
         "AssumeRolePolicyDocument": {
           "Version": "2012-10-17",
           "Statement": [
@@ -301,13 +292,7 @@
           "Fn::Sub": "arn:$${AWS::Partition}:sns:$${AWS::Region}:$${CentralAccountId}:$${DeploymentHelperTopicName}"
         },
         "ServiceTimeout": 120,
-        "RoleArn": {
-          "Fn::If": [
-            "CreateGlobalResources",
-            { "Fn::GetAtt": ["DeploymentHelperRole", "Arn"] },
-            { "Fn::Sub": "arn:$${AWS::Partition}:iam::$${AWS::AccountId}:role/$${DeploymentHelperRoleName}" }
-          ]
-        },
+        "RoleArn": { "Fn::GetAtt": ["DeploymentHelperRole", "Arn"] },
         "Code": "./terraform-stacks/AWS_Backup_BackupVault.tf",
         "TFVARS": {
           "BackupVaultName": {
@@ -340,7 +325,7 @@
                 "Condition": {
                   "ArnNotLike": {
                     "aws:PrincipalArn": [
-                      { "Fn::Sub": "arn:$${AWS::Partition}:iam::$${AWS::AccountId}:role/$${DeploymentHelperRoleName}" },
+                      { "Fn::GetAtt": ["DeploymentHelperRole", "Arn"] },
                       { "Fn::Sub": "arn:$${AWS::Partition}:iam::$${AWS::AccountId}:role/$${BackupServiceRoleName}" },
                       { "Fn::Sub": "arn:$${AWS::Partition}:iam::$${AWS::AccountId}:role/OrganizationAccountAccessRole" }
                     ]

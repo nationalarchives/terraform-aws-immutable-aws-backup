@@ -40,7 +40,7 @@ module "lambda_role" {
         Action : [
           "sts:AssumeRole"
         ]
-        Resource : var.member_account_deployment_helper_role_arn_pattern,
+        Resource : var.member_account_deployment_helper_role_arn_patterns,
         Condition : {
           StringEquals : {
             "aws:ResourceOrgID" : var.current.organization_id

@@ -1,12 +1,14 @@
 locals {
   # Internal
-  account_id                                        = data.aws_caller_identity.current.account_id
-  organization_id                                   = data.aws_organizations_organization.org.id
-  partition_id                                      = data.aws_partition.current.partition
-  region                                            = data.aws_region.current.region
-  member_account_deployment_helper_role_name_suffix = "-deployment-helper"
-
+  account_id         = data.aws_caller_identity.current.account_id
+  organization_id    = data.aws_organizations_organization.org.id
+  partition_id       = data.aws_partition.current.partition
+  region             = data.aws_region.current.region
   deployment_regions = [local.region]
+
+  # Member account deployment role names are templated here but used throughout this module and submodules.
+  member_account_deployment_helper_role_name_template = "${var.member_account_resource_name_prefix}<SERVICE>-deployment-helper-<REGION>"
+  member_account_deployment_helper_role_names         = flatten([for service_name, deployment in var.deployments : [for r in local.deployment_regions : replace(replace(local.member_account_deployment_helper_role_name_template, "<SERVICE>", service_name), "<REGION>", r)]])
 }
 
 module "deployment_helper" {
@@ -16,10 +18,10 @@ module "deployment_helper" {
     partition       = local.partition_id
     region          = local.region
   }
-  deployment_regions                                = local.deployment_regions
-  lambda_function_name                              = join("", [var.central_account_resource_name_prefix, "deployment-helper"])
-  member_account_deployment_helper_role_arn_pattern = join("", ["arn:", local.partition_id, ":iam::*:role/", var.member_account_resource_name_prefix, "*", local.member_account_deployment_helper_role_name_suffix])
-  terraform_state_bucket_name                       = var.terraform_state_bucket_name
+  deployment_regions                                 = local.deployment_regions
+  lambda_function_name                               = join("", [var.central_account_resource_name_prefix, "deployment-helper"])
+  member_account_deployment_helper_role_arn_patterns = [for i in local.member_account_deployment_helper_role_names : join("", ["arn:", local.partition_id, ":iam::*:role/", i])]
+  terraform_state_bucket_name                        = var.terraform_state_bucket_name
 }
 
 module "deployment" {
@@ -41,12 +43,12 @@ module "deployment" {
     partition       = local.partition_id
     region          = local.region
   }
-  central_account_resource_name_prefix              = var.central_account_resource_name_prefix
-  central_backup_service_linked_role_arn            = local.backup_service_linked_role_arn
-  central_backup_service_role_arn                   = module.backup_service_role.role.arn
-  central_deployment_helper_role_arn                = module.deployment_helper.lambda_role.arn
-  central_deployment_helper_topic_name              = module.deployment_helper.sns_topic.name
-  deployment_regions                                = local.deployment_regions
-  member_account_deployment_helper_role_name_suffix = local.member_account_deployment_helper_role_name_suffix
-  member_account_resource_name_prefix               = var.member_account_resource_name_prefix
+  central_account_resource_name_prefix                = var.central_account_resource_name_prefix
+  central_backup_service_linked_role_arn              = local.backup_service_linked_role_arn
+  central_backup_service_role_arn                     = module.backup_service_role.role.arn
+  central_deployment_helper_role_arn                  = module.deployment_helper.lambda_role.arn
+  central_deployment_helper_topic_name                = module.deployment_helper.sns_topic.name
+  deployment_regions                                  = local.deployment_regions
+  member_account_deployment_helper_role_name_template = replace(local.member_account_deployment_helper_role_name_template, "<SERVICE>", each.key)
+  member_account_resource_name_prefix                 = var.member_account_resource_name_prefix
 }

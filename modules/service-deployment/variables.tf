@@ -79,7 +79,7 @@ variable "max_retention_days" {
   }
 }
 
-variable "member_account_deployment_helper_role_name_suffix" {
+variable "member_account_deployment_helper_role_name_template" {
   type = string
 }
 

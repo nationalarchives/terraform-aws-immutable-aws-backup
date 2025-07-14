@@ -44,11 +44,11 @@ locals {
         Resource : "*",
         Condition : {
           ArnLike : {
-            "aws:PrincipalArn" : [
+            "aws:PrincipalArn" : flatten([
               "arn:${var.current.partition}:iam::*:role/aws-service-role/backup.amazonaws.com/AWSServiceRoleForBackup",
               "arn:${var.current.partition}:iam::*:role/${local.member_account_backup_service_role_name}",
-              "arn:${var.current.partition}:iam::*:role/${local.member_account_deployment_helper_role_name}"
-            ]
+              [for r in var.deployment_regions : "arn:${var.current.partition}:iam::*:role/${replace(var.member_account_deployment_helper_role_name_template, "<REGION>", r)}"]
+            ])
           },
           "ForAnyValue:StringLike" : {
             "aws:PrincipalOrgPaths" : local.deployment_ou_paths_including_children
@@ -69,11 +69,11 @@ locals {
         Resource : "*",
         Condition : {
           ArnLike : {
-            "aws:PrincipalArn" : [
+            "aws:PrincipalArn" : flatten([
               "arn:${var.current.partition}:iam::*:role/aws-service-role/backup.amazonaws.com/AWSServiceRoleForBackup",
               "arn:${var.current.partition}:iam::*:role/${local.member_account_backup_service_role_name}",
-              "arn:${var.current.partition}:iam::*:role/${local.member_account_deployment_helper_role_name}"
-            ]
+              [for r in var.deployment_regions : "arn:${var.current.partition}:iam::*:role/${replace(var.member_account_deployment_helper_role_name_template, "<REGION>", r)}"]
+            ])
           },
           Bool : {
             "kms:GrantIsForAWSResource" : "true"
