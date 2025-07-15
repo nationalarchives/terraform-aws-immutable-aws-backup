@@ -12,7 +12,7 @@ locals {
   member_account_restore_vault_name       = join("", [local.member_account_resource_name_prefix, "-default"])
   member_account_backup_service_role_name = join("", [local.member_account_resource_name_prefix, "-backup-service-role"])
   member_account_eventbridge_rule_name    = join("", [local.member_account_resource_name_prefix, "-event-forwarder"])
-  
+
   member_account_backup_service_restore_role_name = join("", [var.central_account_resource_name_prefix, var.service_name, "-backup-service-restore-role"])
 
   create_lag_resources                   = anytrue(values(var.plans)[*]["use_logically_air_gapped_vault"]) ? true : false
