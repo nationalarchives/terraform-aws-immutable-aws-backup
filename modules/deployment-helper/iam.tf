@@ -21,9 +21,10 @@ module "lambda_role" {
       {
         Effect : "Allow"
         Action : [
+          "s3:GetBucketLocation",
           "s3:ListBucket"
         ]
-        Resource : "arn:${local.partition_id}:s3:::${var.terraform_state_bucket_name}"
+        Resource : "arn:${var.current.partition}:s3:::${var.terraform_state_bucket_name}"
       },
       {
         Effect : "Allow"
@@ -32,17 +33,17 @@ module "lambda_role" {
           "s3:PutObject",
           "s3:DeleteObject"
         ]
-        Resource : "arn:${local.partition_id}:s3:::${var.terraform_state_bucket_name}/*"
+        Resource : "arn:${var.current.partition}:s3:::${var.terraform_state_bucket_name}/*"
       },
       {
         Effect : "Allow"
         Action : [
           "sts:AssumeRole"
         ]
-        Resource : var.member_account_deployment_helper_role_arn_pattern,
+        Resource : var.member_account_deployment_helper_role_arn_patterns,
         Condition : {
           StringEquals : {
-            "aws:ResourceOrgID" : var.organization_id
+            "aws:ResourceOrgID" : var.current.organization_id
           }
         }
       }

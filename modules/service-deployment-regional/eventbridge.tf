@@ -2,10 +2,12 @@
 # Event Bus for AWS Backup events from central and member accounts
 #
 resource "aws_cloudwatch_event_bus" "event_bus" {
-  name = local.central_account_resource_name_prefix
+  region = var.region
+  name   = var.eventbridge.bus_name
 }
 
 resource "aws_cloudwatch_event_bus_policy" "event_bus" {
+  region         = var.region
   event_bus_name = aws_cloudwatch_event_bus.event_bus.id
   policy = jsonencode({
     Version : "2012-10-17"
@@ -20,10 +22,10 @@ resource "aws_cloudwatch_event_bus_policy" "event_bus" {
         Resource : "*",
         Condition : {
           ArnLike : {
-            "aws:PrincipalArn" : "arn:*:iam::*:role/${local.member_account_eventbridge_rule_name}",
+            "aws:PrincipalArn" : "arn:${var.current_aws_partition}:iam::*:role/${var.member_account_eventbridge_rule_name}",
           },
           "ForAnyValue:StringLike" : {
-            "aws:PrincipalOrgPaths" : local.deployment_ou_paths_including_children
+            "aws:PrincipalOrgPaths" : var.deployment.ou_paths_including_children
           }
         }
       }
@@ -35,11 +37,13 @@ resource "aws_cloudwatch_event_bus_policy" "event_bus" {
 # Log all events to CloudWatch Logs
 #
 resource "aws_cloudwatch_log_group" "event_bus" {
+  region            = var.region
   name              = "/aws/events/${aws_cloudwatch_event_bus.event_bus.name}"
   retention_in_days = 90
 }
 
 resource "aws_cloudwatch_log_resource_policy" "policy" {
+  region      = var.region
   policy_name = "${aws_cloudwatch_event_bus.event_bus.name}-event_bus_to_cloudwatch"
   policy_document = jsonencode({
     "Version" : "2012-10-17",
@@ -62,6 +66,7 @@ resource "aws_cloudwatch_log_resource_policy" "policy" {
   })
 }
 resource "aws_cloudwatch_event_rule" "event_bus_to_cloudwatch" {
+  region         = var.region
   name           = "log-to-cloudwatch"
   event_bus_name = aws_cloudwatch_event_bus.event_bus.name
   description    = "Logs all events to CloudWatch Logs."
@@ -69,6 +74,7 @@ resource "aws_cloudwatch_event_rule" "event_bus_to_cloudwatch" {
 }
 
 resource "aws_cloudwatch_event_target" "event_bus_to_cloudwatch" {
+  region         = var.region
   rule           = aws_cloudwatch_event_rule.event_bus_to_cloudwatch.name
   event_bus_name = aws_cloudwatch_event_bus.event_bus.name
   arn            = aws_cloudwatch_log_group.event_bus.arn
@@ -77,40 +83,9 @@ resource "aws_cloudwatch_event_target" "event_bus_to_cloudwatch" {
 #
 # Forward events from the local default event bus to the service event bus
 #
-module "default_to_event_bus_role" {
-  source = "../iam-role"
-
-  name = "default-to-${aws_cloudwatch_event_bus.event_bus.name}-event-bus"
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Effect = "Allow"
-      Principal = {
-        Service = "events.amazonaws.com"
-      }
-      Action = "sts:AssumeRole",
-      Condition = {
-        StringEquals = {
-          "aws:SourceAccount" : local.account_id
-        }
-      }
-    }]
-  })
-
-  inline_policy = jsonencode({
-    Version : "2012-10-17"
-    Statement : [
-      {
-        Effect : "Allow",
-        Action : "events:PutEvents",
-        Resource : aws_cloudwatch_event_bus.event_bus.arn,
-      }
-    ]
-  })
-}
-
-# This rule is replicated in the StackSet, make sure to update both places if changes are made.
 resource "aws_cloudwatch_event_rule" "default_to_event_bus" {
+  # This rule is replicated in the StackSet, make sure to update both places if changes are made.
+  region      = var.region
   name        = "backup-events-to-${aws_cloudwatch_event_bus.event_bus.name}-event-bus"
   description = "Forwards AWS Backup events to the ${aws_cloudwatch_event_bus.event_bus.name} event bus."
   event_pattern = jsonencode({
@@ -118,7 +93,7 @@ resource "aws_cloudwatch_event_rule" "default_to_event_bus" {
     "detail-type" : ["Backup Job State Change", "Copy Job State Change"],
     "detail" : {
       "$or" : [
-        { "backupVaultName" : [local.member_account_backup_vault_name] },
+        { "backupVaultName" : [var.member_account_backup_vault_name] },
         { "sourceBackupVaultArn" : local.central_backup_vault_arns },
         { "destinationBackupVaultArn" : local.central_backup_vault_arns }
       ]
@@ -127,7 +102,8 @@ resource "aws_cloudwatch_event_rule" "default_to_event_bus" {
 }
 
 resource "aws_cloudwatch_event_target" "default_to_event_bus" {
+  region   = var.region
   rule     = aws_cloudwatch_event_rule.default_to_event_bus.name
   arn      = aws_cloudwatch_event_bus.event_bus.arn
-  role_arn = module.default_to_event_bus_role.role.arn
+  role_arn = var.eventbridge.forwarder_iam_role_arn
 }

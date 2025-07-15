@@ -1,14 +1,12 @@
-resource "aws_kms_key" "key" {
-  description         = "Key for ${var.service_name} backups. Used to encrypt the member account vaults and the central intermediate vault."
-  enable_key_rotation = true
-  policy = jsonencode({
+locals {
+  kms_key_policy = jsonencode({
     Version : "2012-10-17"
     Statement : concat([
       {
         Sid : "DelegateToIamForOwnerAccount",
         Effect : "Allow",
         Principal : {
-          AWS : "arn:${local.partition_id}:iam::${local.account_id}:root"
+          AWS : "arn:${var.current.partition}:iam::${var.current.account_id}:root"
         },
         Action : "kms:*",
         Resource : "*"
@@ -46,11 +44,11 @@ resource "aws_kms_key" "key" {
         Resource : "*",
         Condition : {
           ArnLike : {
-            "aws:PrincipalArn" : [
-              "arn:${local.partition_id}:iam::*:role/aws-service-role/backup.amazonaws.com/AWSServiceRoleForBackup",
-              "arn:${local.partition_id}:iam::*:role/${local.member_account_backup_service_role_name}",
-              "arn:${local.partition_id}:iam::*:role/${local.member_account_deployment_helper_role_name}"
-            ]
+            "aws:PrincipalArn" : flatten([
+              "arn:${var.current.partition}:iam::*:role/aws-service-role/backup.amazonaws.com/AWSServiceRoleForBackup",
+              "arn:${var.current.partition}:iam::*:role/${local.member_account_backup_service_role_name}",
+              [for r in var.deployment_regions : "arn:${var.current.partition}:iam::*:role/${replace(var.member_account_deployment_helper_role_name_template, "<REGION>", r)}"]
+            ])
           },
           "ForAnyValue:StringLike" : {
             "aws:PrincipalOrgPaths" : local.deployment_ou_paths_including_children
@@ -71,11 +69,11 @@ resource "aws_kms_key" "key" {
         Resource : "*",
         Condition : {
           ArnLike : {
-            "aws:PrincipalArn" : [
-              "arn:${local.partition_id}:iam::*:role/aws-service-role/backup.amazonaws.com/AWSServiceRoleForBackup",
-              "arn:${local.partition_id}:iam::*:role/${local.member_account_backup_service_role_name}",
-              "arn:${local.partition_id}:iam::*:role/${local.member_account_deployment_helper_role_name}"
-            ]
+            "aws:PrincipalArn" : flatten([
+              "arn:${var.current.partition}:iam::*:role/aws-service-role/backup.amazonaws.com/AWSServiceRoleForBackup",
+              "arn:${var.current.partition}:iam::*:role/${local.member_account_backup_service_role_name}",
+              [for r in var.deployment_regions : "arn:${var.current.partition}:iam::*:role/${replace(var.member_account_deployment_helper_role_name_template, "<REGION>", r)}"]
+            ])
           },
           Bool : {
             "kms:GrantIsForAWSResource" : "true"
@@ -90,6 +88,13 @@ resource "aws_kms_key" "key" {
       var.additional_kms_statements
     )
   })
+}
+
+resource "aws_kms_key" "key" {
+  description         = "Key for ${var.service_name} backups. Used to encrypt the member account vaults and the central intermediate vault."
+  enable_key_rotation = true
+  multi_region        = true
+  policy              = local.kms_key_policy
 }
 
 resource "aws_kms_alias" "key" {

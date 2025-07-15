@@ -14,30 +14,34 @@
     "BackupVaultName": {
       "Type": "String"
     },
-    "CentralBackupVaultArns": {
-      "Type": "List<String>",
-      "Description": "List of ARNs of the central backup vaults to which this account will send backups to."
+    "CentralAccountId": {
+      "Type": "String",
+      "Description": "The AWS Account ID of the central account."
     },
-    "CentralEventBusArn": {
+    "EventBusName": {
       "Type": "String"
     },
     "EventBridgeRuleName": {
       "Type": "String"
     },
-    "KmsKeyArn": {
+    "KmsKeyId": {
       "Type": "String"
     },
-    "DeploymentHelperTopicArn": {
+    "DeploymentHelperTopicName": {
       "Type": "String",
-      "Description": "ARN of the central SNS topic used to trigger the deployment helper Lambda function."
+      "Description": "Name of the central SNS topic used to trigger the deployment helper Lambda function."
     },
     "DeploymentHelperRoleArn": {
       "Type": "String",
       "Description": "ARN of the central deployment helper Lambda function role, used in the trust policy of the member account Deployment Helper role."
     },
-    "DeploymentHelperRoleName": {
+    "DeploymentHelperRoleNamePrefix": {
       "Type": "String",
-      "Description": "Name of the role to create to be assumed in the member account by the deployment helper Lambda function."
+      "Description": "Prefix for the name of the role to create to be assumed in the member account by the deployment helper Lambda function, will be suffixed with the current region."
+    },
+    "PrimaryRegion": {
+      "Type": "String",
+      "Description": "One of the regions the stack is being deployed to, used to determine the global resources (e.g. IAM) will be created."
     },
     "RestoreVaultName": {
       "Type": "String"
@@ -50,9 +54,15 @@
       "Type": "String"
     }
   },
+  "Conditions": {
+    "CreateGlobalResources": {
+      "Fn::Equals": [{ "Ref": "PrimaryRegion" }, { "Ref": "AWS::Region" }]
+    }
+  },
   "Resources": {
     "BackupServiceRole": {
       "Type": "AWS::IAM::Role",
+      "Condition": "CreateGlobalResources",
       "Properties": {
         "RoleName": {
           "Ref": "BackupServiceRoleName"
@@ -111,8 +121,11 @@
     },
     "BackupServiceLinkedRole": {
       "Type": "Custom::AWS__IAM__ServiceLinkedRole",
+      "Condition": "CreateGlobalResources",
       "Properties": {
-        "ServiceToken": { "Ref": "DeploymentHelperTopicArn" },
+        "ServiceToken": {
+          "Fn::Sub": "arn:$${AWS::Partition}:sns:$${AWS::Region}:$${CentralAccountId}:$${DeploymentHelperTopicName}"
+        },
         "ServiceTimeout": 120,
         "RoleArn": { "Fn::GetAtt": ["DeploymentHelperRole", "Arn"] },
         "AWSServiceName": "backup.amazonaws.com"
@@ -121,7 +134,9 @@
     "BackupVault": {
       "Type": "Custom::TerraformDeployment",
       "Properties": {
-        "ServiceToken": { "Ref": "DeploymentHelperTopicArn" },
+        "ServiceToken": {
+          "Fn::Sub": "arn:$${AWS::Partition}:sns:$${AWS::Region}:$${CentralAccountId}:$${DeploymentHelperTopicName}"
+        },
         "ServiceTimeout": 120,
         "RoleArn": { "Fn::GetAtt": ["DeploymentHelperRole", "Arn"] },
         "Code": "./terraform-stacks/AWS_Backup_BackupVault.tf",
@@ -130,7 +145,9 @@
             "Ref": "BackupVaultName"
           },
           "ForceDestroy": true,
-          "EncryptionKeyArn": { "Ref": "KmsKeyArn" },
+          "EncryptionKeyArn": {
+            "Fn::Sub": "arn:$${AWS::Partition}:kms:$${AWS::Region}:$${CentralAccountId}:key/$${KmsKeyId}"
+          },
           "AccessPolicy": {
             "Version": "2012-10-17",
             "Statement": [
@@ -158,8 +175,8 @@
                   "ArnNotLike": {
                     "aws:PrincipalArn": [
                       { "Fn::GetAtt": ["DeploymentHelperRole", "Arn"] },
-                      { "Fn::GetAtt": ["BackupServiceRole", "Arn"] },
-                      { "Fn::Sub": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/OrganizationAccountAccessRole" }
+                      { "Fn::Sub": "arn:$${AWS::Partition}:iam::$${AWS::AccountId}:role/$${BackupServiceRoleName}" },
+                      { "Fn::Sub": "arn:$${AWS::Partition}:iam::$${AWS::AccountId}:role/OrganizationAccountAccessRole" }
                     ]
                   }
                 }
@@ -172,9 +189,7 @@
     "DeploymentHelperRole": {
       "Type": "AWS::IAM::Role",
       "Properties": {
-        "RoleName": {
-          "Ref": "DeploymentHelperRoleName"
-        },
+        "RoleName": { "Fn::Sub": "$${DeploymentHelperRoleNamePrefix}$${AWS::Region}" },
         "AssumeRolePolicyDocument": {
           "Version": "2012-10-17",
           "Statement": [
@@ -197,6 +212,7 @@
     },
     "EventBridgeRole": {
       "Type": "AWS::IAM::Role",
+      "Condition": "CreateGlobalResources",
       "Properties": {
         "RoleName": {
           "Ref": "EventBridgeRuleName"
@@ -212,9 +228,7 @@
               "Action": ["sts:AssumeRole"],
               "Condition": {
                 "ArnEquals": {
-                  "aws:SourceArn": {
-                    "Fn::Sub": "arn:${AWS::Partition}:events:${AWS::Region}:${AWS::AccountId}:rule/${EventBridgeRuleName}"
-                  }
+                  "aws:SourceArn": ${jsonencode(member_eventbridge_rule_arn_templates)}
                 }
               }
             }
@@ -229,7 +243,9 @@
                 {
                   "Effect": "Allow",
                   "Action": ["events:PutEvents"],
-                  "Resource": { "Ref": "CentralEventBusArn" }
+                  "Resource": {
+                    "Fn::Sub": "arn:$${AWS::Partition}:events:*:$${CentralAccountId}:event-bus/$${EventBusName}"
+                  }
                 }
               ]
             }
@@ -247,16 +263,24 @@
           "detail": {
             "$or": [
               { "backupVaultName": [{ "Ref": "BackupVaultName" }] },
-              { "sourceBackupVaultArn": { "Ref": "CentralBackupVaultArns" } },
-              { "destinationBackupVaultArn": { "Ref": "CentralBackupVaultArns" } }
+              { "sourceBackupVaultArn": ${jsonencode(central_backup_vault_arn_templates)} },
+              { "destinationBackupVaultArn": ${jsonencode(central_backup_vault_arn_templates)} }
             ]
           }
         },
         "Targets": [
           {
-            "Arn": { "Ref": "CentralEventBusArn" },
+            "Arn": {
+              "Fn::Sub": "arn:$${AWS::Partition}:events:$${AWS::Region}:$${CentralAccountId}:event-bus/$${EventBusName}"
+            },
             "Id": "SendToCentralBackupEventBus",
-            "RoleArn": { "Fn::GetAtt": ["EventBridgeRole", "Arn"] }
+            "RoleArn": {
+              "Fn::If": [
+                "CreateGlobalResources",
+                { "Fn::GetAtt": ["EventBridgeRole", "Arn"] },
+                { "Fn::Sub": "arn:$${AWS::Partition}:iam::$${AWS::AccountId}:role/$${EventBridgeRuleName}" }
+              ]
+            }
           }
         ]
       }
@@ -264,7 +288,9 @@
     "RestoreVault": {
       "Type": "Custom::TerraformDeployment",
       "Properties": {
-        "ServiceToken": { "Ref": "DeploymentHelperTopicArn" },
+        "ServiceToken": {
+          "Fn::Sub": "arn:$${AWS::Partition}:sns:$${AWS::Region}:$${CentralAccountId}:$${DeploymentHelperTopicName}"
+        },
         "ServiceTimeout": 120,
         "RoleArn": { "Fn::GetAtt": ["DeploymentHelperRole", "Arn"] },
         "Code": "./terraform-stacks/AWS_Backup_BackupVault.tf",
@@ -272,7 +298,42 @@
           "BackupVaultName": {
             "Ref": "RestoreVaultName"
           },
-          "ForceDestroy": true
+          "ForceDestroy": true,
+          "AccessPolicy": {
+            "Version": "2012-10-17",
+            "Statement": [
+              {
+                "Effect": "Deny",
+                "Principal": {
+                  "AWS": "*"
+                },
+                "Action": [
+                  "backup:CopyIntoBackupVault",
+                  "backup:DeleteBackupVault",
+                  "backup:DeleteBackupVaultAccessPolicy",
+                  "backup:DeleteBackupVaultLockConfiguration",
+                  "backup:DeleteBackupVaultNotifications",
+                  "backup:DeleteRecoveryPoint",
+                  "backup:DisassociateBackupVaultMpaApprovalTeam",
+                  "backup:PutBackupVaultAccessPolicy",
+                  "backup:PutBackupVaultLockConfiguration",
+                  "backup:PutBackupVaultNotifications",
+                  "backup:StartBackupJob",
+                  "backup:UpdateRecoveryPointLifecycle"
+                ],
+                "Resource": "*",
+                "Condition": {
+                  "ArnNotLike": {
+                    "aws:PrincipalArn": [
+                      { "Fn::GetAtt": ["DeploymentHelperRole", "Arn"] },
+                      { "Fn::Sub": "arn:$${AWS::Partition}:iam::$${AWS::AccountId}:role/$${BackupServiceRoleName}" },
+                      { "Fn::Sub": "arn:$${AWS::Partition}:iam::$${AWS::AccountId}:role/OrganizationAccountAccessRole" }
+                    ]
+                  }
+                }
+              }
+            ]
+          }
         }
       }
     }
