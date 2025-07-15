@@ -13,7 +13,8 @@ locals {
   member_account_backup_service_role_name = join("", [local.member_account_resource_name_prefix, "-backup-service-role"])
   member_account_eventbridge_rule_name    = join("", [local.member_account_resource_name_prefix, "-event-forwarder"])
 
-  member_account_backup_service_restore_role_name = join("", [var.central_account_resource_name_prefix, var.service_name, "-backup-service-restore-role"])
+  # Use different prefix so any SCP restrictions don't apply to restore role
+  member_account_backup_service_restore_role_name = join("", [local.central_account_resource_name_prefix, "-backup-service-restore-role"])
 
   create_lag_resources                   = anytrue(values(var.plans)[*]["use_logically_air_gapped_vault"]) ? true : false
   lag_vaults_exist                       = anytrue(flatten([local.create_lag_resources, var.retained_vaults[*].use_logically_air_gapped_vault]))
