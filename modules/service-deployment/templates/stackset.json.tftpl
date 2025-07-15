@@ -4,6 +4,9 @@
     "BackupServiceRoleName": {
       "Type": "String"
     },
+    "BackupServiceRestoreRoleName": {
+      "Type": "String"
+    },
     "BackupServiceRolePrincipals": {
       "Type": "List<String>",
       "Description": "List of principals that can assume the Backup Service Role in addition to the AWS Backup service."
@@ -116,6 +119,34 @@
               ]
             }
           }
+        ]
+      }
+    },
+    "BackupServiceRestoreRole": {
+      "Type": "AWS::IAM::Role",
+      "Condition": "CreateGlobalResources",
+      "Properties": {
+        "RoleName": { "Ref": "BackupServiceRestoreRoleName" },
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": ["backup.amazonaws.com"]
+              },
+              "Action": ["sts:AssumeRole"],
+              "Condition": {
+                "StringEquals": {
+                  "aws:SourceAccount": { "Ref": "AWS::AccountId" }
+                }
+              }
+            }
+          ]
+        },
+        "ManagedPolicyArns": [
+          "arn:aws:iam::aws:policy/service-role/AWSBackupServiceRolePolicyForRestores",
+          "arn:aws:iam::aws:policy/AWSBackupServiceRolePolicyForS3Restore"
         ]
       }
     },
