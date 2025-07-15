@@ -1,3 +1,11 @@
+locals {
+  cfn_backup_vault_admin_arn_templates = flatten([
+    { "Fn::GetAtt" : ["DeploymentHelperRole", "Arn"] },
+    { "Fn::Sub" : "arn:$${AWS::Partition}:iam::$${AWS::AccountId}:role/$${BackupServiceRoleName}" },
+    [for i in var.admin_role_names : { "Fn::Sub" : "arn:$${AWS::Partition}:iam::$${AWS::AccountId}:role/${i}" }],
+  ])
+}
+
 resource "aws_cloudformation_stack_set" "member_account_deployments" {
   name             = local.member_account_resource_name_prefix
   description      = "Centralised AWS Backup for ${var.service_name}."
@@ -10,6 +18,7 @@ resource "aws_cloudformation_stack_set" "member_account_deployments" {
   template_body = jsonencode(jsondecode(templatefile("${path.module}/templates/stackset.json.tftpl", {
     central_backup_vault_arn_templates    = [for i in local.central_backup_vault_arns_template : { "Fn::Sub" : replace(replace(i, "<REGION>", "$${AWS::Region}"), var.current.account_id, "$${CentralAccountId}") }],
     member_eventbridge_rule_arn_templates = [for i in var.deployment_regions : { "Fn::Sub" : "arn:${var.current.partition}:events:${i}:$${AWS::AccountId}:rule/${local.member_account_eventbridge_rule_name}" }],
+    backup_vault_admin_arn_templates      = local.cfn_backup_vault_admin_arn_templates
   })))
 
   parameters = {
