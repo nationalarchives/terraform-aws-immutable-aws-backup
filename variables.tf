@@ -46,6 +46,6 @@ variable "member_account_resource_name_prefix" {
 
 variable "terraform_state_bucket_name" {
   type        = string
-  description = "Name of S3 bucket for custom Terraform deployments, if left at default, S3 bucket will be created"
+  description = "Name of the S3 bucket used for storing Terraform state files for resources in workload accounts. If not specified, an S3 bucket will be created in the central account."
   default     = ""
 }

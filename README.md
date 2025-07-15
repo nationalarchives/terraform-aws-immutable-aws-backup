@@ -3,20 +3,21 @@
 An open-source Terraform module to deploy and orchestrate AWS Backup for creating fully immutable backups within an AWS Organization.
 
 - Manages the deployment of Backup Vaults to member accounts using CloudFormation StackSets.
+- Allows for targetted deployments to specific Organizations Units (OUs) and prevents cross-talk between deployments.
 - Stores backups in a central AWS account to protect against account closure or suspension.
-- Protection against KMS Key deletion through using AWS Managed and AWS Owned keys.
-- Support for Logically Air Gapped Vaults, with logic to use them only for supported resource types.
+- Protects against KMS Key deletion through using AWS Managed and AWS Owned keys.
+- Supports Logically Air Gapped Vaults, with logic to use them only for supported resource types.
 - (Optional) Resource selection using tags.
-- Implements AWS best practices and guidance for security and cost.
-- Simplifies the process of configuring AWS Backup plans.
+- Implements AWS best practice and guidance for security and cost.
+- Simplifies the process of configuring AWS Backup.
 
-See [Why use this module?](https://nationalarchives.github.io/terraform-aws-immutable-aws-backup/why-use-this-module/) in our docs to understand the issues this module solves and how it works.
+See [Why use this module?](https://nationalarchives.github.io/terraform-aws-immutable-aws-backup/why-use-this-module/) to learn more about the issues this module solves and how it works.
 
 ## Architecture and deployment
 
-The module is designed to be deployed in a dedicated account within an AWS Organization, this account must be [delegated certain abilities for the module to function](https://nationalarchives.github.io/terraform-aws-immutable-aws-backup/usage/). Go to our [Architecture](https://nationalarchives.github.io/terraform-aws-immutable-aws-backup/architecture/) documentation for a more detailed explanation of the architecture and how the module works.
+The module is designed to be deployed in a dedicated account within an AWS Organization, this account must be [delegated certain abilities for the module to function](https://nationalarchives.github.io/terraform-aws-immutable-aws-backup/usage/). See our [Architecture](https://nationalarchives.github.io/terraform-aws-immutable-aws-backup/architecture/) documentation for a detailed explanation of the architecture and how the module works.
 
-![Architecture Diagram](https://raw.githubusercontent.com/nationalarchives/terraform-aws-immutable-aws-backup/refs/heads/main/docs/assets/images/backup-architecture.png)
+![Architecture Diagram](https://raw.githubusercontent.com/nationalarchives/terraform-aws-immutable-aws-backup/refs/heads/main/docs/assets/images/backup-deployment-architecture.png)
 
 ## Example Usage
 
@@ -27,11 +28,10 @@ module "immutable_aws_backup" {
 
   central_account_resource_name_prefix = "immutable-aws-backup-"
   member_account_resource_name_prefix  = "orgdeploy-immutable-aws-backup-"
-  terraform_state_bucket_name          = "my-terraform-state-bucket"
 
   deployments = {
     "website-service" = {
-      backup_targets     = ["ou-abcd-defghijk"]
+      targets            = ["ou-abcd-defghijk"]
       min_retention_days = 7
       max_retention_days = 90
       backup_tag_key     = "BackupPlan"
@@ -42,17 +42,17 @@ module "immutable_aws_backup" {
           rules = [
             {
               name                = "daily",
-              schedule_expression = "cron(0 3 ? * * *)"
+              schedule_expression = "cron(0 3 ? * * *)" # Every day at 3am UTC
               delete_after_days   = 7
             },
             {
               name                = "weekly",
-              schedule_expression = "cron(0 3 ? * 2 *)"
+              schedule_expression = "cron(0 3 ? * 2 *)" # Every Monday at 3am UTC
               delete_after_days   = 28
             },
             {
               name                = "monthly",
-              schedule_expression = "cron(0 3 1 * ? *)"
+              schedule_expression = "cron(0 3 1 * ? *)" # Every 1st of the month at 3am UTC
               delete_after_days   = 90
             }
           ]
