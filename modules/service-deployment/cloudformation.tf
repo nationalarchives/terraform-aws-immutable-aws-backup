@@ -24,6 +24,7 @@ resource "aws_cloudformation_stack_set" "member_account_deployments" {
   parameters = {
     BackupServiceLinkedRoleArn     = var.central_backup_service_linked_role_arn
     BackupServiceRoleName          = local.member_account_backup_service_role_name
+    BackupServiceRestoreRoleName   = local.member_account_backup_service_restore_role_name
     BackupServiceRolePrincipals    = join(", ", [module.backup_ingest_sfn_role.role.arn])
     BackupVaultName                = local.member_account_backup_vault_name
     CentralAccountId               = var.current.account_id
