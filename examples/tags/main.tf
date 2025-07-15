@@ -8,12 +8,12 @@ module "aws_backup" {
   terraform_state_bucket_name          = var.terraform_state_bucket
   deployments = {
     "ca-prod" = {
-      backup_targets     = [module.ou_data_lookup.by_name_path["Workloads / Serverless / CA / RSA CA"].id]
-      min_retention_days = 7
-      max_retention_days = 12
-      restores_enabled   = true
-      backup_tag_key     = "BackupPolicy"
-      plans              = local.ca_default_plans
+      backup_targets                  = [module.ou_data_lookup.by_name_path["Workloads / Serverless / CA / RSA CA"].id]
+      min_retention_days              = 7
+      max_retention_days              = 12
+      allow_backup_targets_to_restore = true
+      backup_tag_key                  = "BackupPolicy"
+      plans                           = local.ca_default_plans
     }
   }
 }

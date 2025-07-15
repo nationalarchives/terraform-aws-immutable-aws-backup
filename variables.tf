@@ -5,11 +5,12 @@ variable "central_account_resource_name_prefix" {
 
 variable "deployments" {
   type = map(object({
-    admin_role_names   = optional(list(string), []) # Names of IAM roles that have admin access to the deployment. E.g. can manage the backup vaults in member accounts.
-    backup_tag_key     = optional(string)
-    backup_targets     = list(string)
-    max_retention_days = optional(number)
-    min_retention_days = optional(number)
+    admin_role_names                = optional(list(string), []) # Names of IAM roles that have admin access to the deployment. E.g. can manage the backup vaults in member accounts.
+    allow_backup_targets_to_restore = bool,
+    backup_tag_key                  = optional(string)
+    backup_targets                  = list(string)
+    max_retention_days              = optional(number)
+    min_retention_days              = optional(number)
     plans = map(object({
       complete_backup_window_minutes        = optional(number)
       continuous_backup_schedule_expression = optional(string, "cron(0 0 ? * * *)") # Schedule for creating continuous backups, if enabled.
@@ -30,7 +31,6 @@ variable "deployments" {
         start_backup_window_minutes    = optional(number)
       }))
     }))
-    restores_enabled = bool,
     retained_vaults = optional(list(object({
       min_retention_days             = number,
       max_retention_days             = number,

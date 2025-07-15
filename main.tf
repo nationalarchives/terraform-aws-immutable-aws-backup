@@ -35,7 +35,7 @@ module "deployment" {
   max_retention_days = each.value.max_retention_days
   min_retention_days = each.value.min_retention_days
   plans              = each.value.plans
-  restores_enabled   = each.value.restores_enabled
+  restores_enabled   = each.value.allow_backup_targets_to_restore
   retained_vaults    = each.value.retained_vaults
 
   current = {
