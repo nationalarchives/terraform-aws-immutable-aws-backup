@@ -4,6 +4,12 @@ variable "additional_kms_statements" {
   default     = []
 }
 
+variable "admin_role_names" {
+  description = "List of IAM role names that have admin access to the deployment. E.g. can manage the backup vaults in member accounts."
+  type        = list(string)
+  default     = []
+}
+
 variable "backup_tag_key" {
   description = "The key of the tag to be used during backup resource selection. Required when a plan uses the require_plan_name_resource_tag configuration."
   type        = string

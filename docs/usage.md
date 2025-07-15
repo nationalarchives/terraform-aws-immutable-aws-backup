@@ -11,7 +11,7 @@ The module is designed to be deployed into a delegated administrator account wit
 - [Backup Policies](https://docs.aws.amazon.com/organizations/latest/userguide/enable-policy-type.html) within your Organization.
 - [Enable cross-account backup](https://docs.aws.amazon.com/aws-backup/latest/devguide/create-cross-account-backup.html#prereq-cab) is turned on within your Organization.
 - [AWS Backup cross-account monitoring](https://docs.aws.amazon.com/aws-backup/latest/devguide/manage-cross-account.html#enable-cross-account) is enabled within your Organization.
-- Resource Access Manager (RAM) sharing with AWS Organizations enabled in management account at Resource Access Manager, Settings 
+- Resource Access Manager (RAM) sharing with AWS Organizations enabled in management account at Resource Access Manager, Settings
 - The account you are deploying to has been [delegated to manage AWS Backup](https://docs.aws.amazon.com/aws-backup/latest/devguide/manage-cross-account.html#backup-delegatedadmin).
 - The account you are deploying to has been [delegated to manage CloudFormation StackSets](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/stacksets-orgs-delegated-admin.html).
 - The account you are deploying to has permission to [manage Backup Policies](https://docs.aws.amazon.com/organizations/latest/userguide/orgs_delegate_policies.html) as detailed in [our example delegation policy](./org-policy.md).
@@ -29,6 +29,7 @@ A deployment is an instance of the backup solution. Within the deployment accoun
 <!-- prettier-ignore-start -->
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|----------|
+| <a name="deployments_admin_role_names"></a> [backup\_tag\_key](#deployments\_admin\_role\_names) | A list of role names that will have administrator abilities in member accounts. For example, administering the Backup Vaults. | `list(string)` | `[]` | no |
 | <a name="deployments_backup_tag_key"></a> [backup\_tag\_key](#deployments\_backup\_tag\_key) | The tag key to query when `require_plan_name_resource_tag` is enabled within a plan. | `string` | `null` | no |
 | <a name="deployments_max_retention_days"></a> [max\_retention\_days](#deployments\_max\_retention\_days) | The maximum retention to configure on the Backup Vaults. Required when a plan is using a LAG Vault. | `number` | `null` | no |
 | <a name="deployments_min_retention_days"></a> [min\_retention\_days](#deployments\_min\_retention\_days) | The minimum retention to configure on the Backup Vaults. Required when a plan is using a LAG Vault. | `number` | `null` | no |

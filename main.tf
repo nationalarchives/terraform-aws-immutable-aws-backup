@@ -29,6 +29,7 @@ module "deployment" {
   for_each = var.deployments
 
   service_name       = each.key
+  admin_role_names   = each.value.admin_role_names
   backup_tag_key     = each.value.backup_tag_key
   deployment_targets = each.value.targets
   max_retention_days = each.value.max_retention_days
