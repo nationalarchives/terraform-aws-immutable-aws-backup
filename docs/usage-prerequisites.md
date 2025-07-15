@@ -1,8 +1,24 @@
-# Organization Delegation Policy
+# Prerequisites
 
-The account to which you are deploying this module requires permission to [manage Backup Policies](https://docs.aws.amazon.com/organizations/latest/userguide/orgs_delegate_policies.html) through your Organization's delegation policy.
+**It is strongly recommended that this module is deployed into a dedicated AWS Backup account within your AWS Organization.**
 
-An example delegation policy is provided below, derived from [AWS guidelines](https://aws.amazon.com/blogs/storage/delegated-administrator-support-for-aws-backup). 
+The module is designed to be deployed into a delegated administrator account within an AWS Organization, it assumes that these requirements are met when deploying:
+
+- [All features are enabled](https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_org_support-all-features.html) for your AWS Organization.
+- [Trusted access with AWS Backup](https://docs.aws.amazon.com/organizations/latest/userguide/services-that-can-integrate-backup.html#integrate-enable-ta-backup) is enabled on your Organization.
+- [Backup Policies](https://docs.aws.amazon.com/organizations/latest/userguide/enable-policy-type.html) are enabled within your Organization.
+- [Enable cross-account backup](https://docs.aws.amazon.com/aws-backup/latest/devguide/create-cross-account-backup.html#prereq-cab) is turned on within your Organization.
+- [AWS Backup cross-account monitoring](https://docs.aws.amazon.com/aws-backup/latest/devguide/manage-cross-account.html#enable-cross-account) is enabled within your Organization.
+- Resource Access Manager (RAM) sharing with AWS Organizations enabled in management account at Resource Access Manager, Settings
+- The account you are deploying to has been [delegated to manage AWS Backup](https://docs.aws.amazon.com/aws-backup/latest/devguide/manage-cross-account.html#backup-delegatedadmin).
+- The account you are deploying to has been [delegated to manage CloudFormation StackSets](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/stacksets-orgs-delegated-admin.html).
+- The account you are deploying to has permission to [manage Backup Policies](https://docs.aws.amazon.com/organizations/latest/userguide/orgs_delegate_policies.html) as detailed in [our example resource-based delegation policy](#Example-organization-resource-based-delegation-policy).
+
+## Example organization resource-based delegation policy
+
+The account to which you are deploying this module requires permission to [manage Backup Policies](https://docs.aws.amazon.com/organizations/latest/userguide/orgs_delegate_policies.html) through your Organization's resource-based delegation policy.
+
+An example resource-based delegation policy is provided below, derived from [AWS guidelines](https://aws.amazon.com/blogs/storage/delegated-administrator-support-for-aws-backup).
 
 - In the console for your AWS management account, navigate to AWS Organizations -> Settings -> Delegated administrator for AWS Organizations -> Delegate
 
@@ -18,6 +34,7 @@ An example delegation policy is provided below, derived from [AWS guidelines](ht
 
 - replace `${root_id}` with your Organization Root ID
 
+<!-- prettier-ignore-start -->
 ```json
 {
   "Version": "2012-10-17",
@@ -94,3 +111,4 @@ An example delegation policy is provided below, derived from [AWS guidelines](ht
   ]
 }
 ```
+<!-- prettier-ignore-end -->

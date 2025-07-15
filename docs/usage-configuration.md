@@ -1,30 +1,21 @@
-# Using the module
+# Configuration
 
-## Prerequisites
+The module is designed to be deployed only once per Organization, it can be deployed multiple times as long as [`central_account_resource_name_prefix`](#inputs_central_account_resource_name_prefix) is unique to each module call. Within the configuration of the module you can define multiple deployments to target areas of your organization with tailored backup plans.
 
-**It is strongly recommended that this module is deployed into a dedicated AWS Backup account within your AWS Organization.**
+## Inputs
 
-The module is designed to be deployed into a delegated administrator account within an AWS Organization, it assumes that these requirements are met when deploying:
-
-- [All features are enabled](https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_org_support-all-features.html) for your AWS Organization.
-- [Trusted access with AWS Backup](https://docs.aws.amazon.com/organizations/latest/userguide/services-that-can-integrate-backup.html#integrate-enable-ta-backup) is enabled on your Organization.
-- [Backup Policies](https://docs.aws.amazon.com/organizations/latest/userguide/enable-policy-type.html) within your Organization.
-- [Enable cross-account backup](https://docs.aws.amazon.com/aws-backup/latest/devguide/create-cross-account-backup.html#prereq-cab) is turned on within your Organization.
-- [AWS Backup cross-account monitoring](https://docs.aws.amazon.com/aws-backup/latest/devguide/manage-cross-account.html#enable-cross-account) is enabled within your Organization.
-- Resource Access Manager (RAM) sharing with AWS Organizations enabled in management account at Resource Access Manager, Settings
-- The account you are deploying to has been [delegated to manage AWS Backup](https://docs.aws.amazon.com/aws-backup/latest/devguide/manage-cross-account.html#backup-delegatedadmin).
-- The account you are deploying to has been [delegated to manage CloudFormation StackSets](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/stacksets-orgs-delegated-admin.html).
-- The account you are deploying to has permission to [manage Backup Policies](https://docs.aws.amazon.com/organizations/latest/userguide/orgs_delegate_policies.html) as detailed in [our example delegation policy](./org-policy.md).
-
-## Deployment & Configuration
-
-The module is to be deployed only once per Organization, within the configuration for the module you can define multiple deployments with unique settings.
+<!-- prettier-ignore-start -->
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|----------|
+| <a name="inputs_central_account_resource_name_prefix"></a> [central\_account\_resource\_name\_prefix](#inputs\_central\_account\_resource\_name\_prefix) | Prefix to be used for resource names in the central account. | `string` |  | yes |
+| <a name="inputs_deployments"></a> [deployments](#inputs\_deployments) | A map of deployments, see [Deployments](#deployments) | `map(object)` |  | you |
+| <a name="inputs_member_account_resource_name_prefix"></a> [member\_account\_resource\_name\_prefix](#inputs\_member\_account\_resource\_name\_prefix) | Prefix to be used for resource names in member accounts. | `string` |  | yes |
+| <a name="inputs_terraform_state_bucket_name"></a> [terraform\_state\_bucket\_name](#inputs\_terraform\_state\_bucket\_name) | Name of the S3 bucket used for storing Terraform state files for resources within workload accounts. | `string` |  | yes |
+<!-- prettier-ignore-end -->
 
 ### Deployments
 
 A deployment is an instance of the backup solution. Within the deployment account it creates a single set of resources (Backup Vaults, KMS Key, CloudFormation StackSet, etc.) that can then be used by multiple workload accounts. Deployments create a **security boundary** for your backups. The key value for each deployment is used to generate unique resource names within the deployment account and workload accounts.
-
-### Variables
 
 <!-- prettier-ignore-start -->
 | Name | Description | Type | Default | Required |

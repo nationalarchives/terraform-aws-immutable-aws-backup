@@ -46,5 +46,5 @@ variable "member_account_resource_name_prefix" {
 
 variable "terraform_state_bucket_name" {
   type        = string
-  description = "Name of the S3 bucket used for storing Terraform state files for custom Terraform deployments."
+  description = "Name of the S3 bucket used for storing Terraform state files for resources within workload accounts."
 }
