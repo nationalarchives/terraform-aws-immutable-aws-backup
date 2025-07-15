@@ -31,7 +31,7 @@ module "deployment" {
   service_name       = each.key
   admin_role_names   = each.value.admin_role_names
   backup_tag_key     = each.value.backup_tag_key
-  deployment_targets = each.value.targets
+  deployment_targets = each.value.backup_targets
   max_retention_days = each.value.max_retention_days
   min_retention_days = each.value.min_retention_days
   plans              = each.value.plans

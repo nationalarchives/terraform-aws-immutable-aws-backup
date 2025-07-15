@@ -31,12 +31,12 @@ A deployment is an instance of the backup solution. Within the deployment accoun
 |------|-------------|------|---------|----------|
 | <a name="deployments_admin_role_names"></a> [admin\_role\_names](#deployments\_admin\_role\_names) | A list of role names that will have administrator abilities in member accounts. For example, administering the Backup Vaults. | `list(string)` | `[]` | no |
 | <a name="deployments_backup_tag_key"></a> [backup\_tag\_key](#deployments\_backup\_tag\_key) | The tag key to query when `require_plan_name_resource_tag` is enabled within a plan. | `string` | `null` | no |
+| <a name="deployments_backup_targets"></a> [backup\_targets](#deployments\_backup\_targets) | A list of Organizational Unit IDs to deploy the backup solution to. The module will deploy to all accounts within these OUs. | `list(string)` |  | yes |
 | <a name="deployments_max_retention_days"></a> [max\_retention\_days](#deployments\_max\_retention\_days) | The maximum retention to configure on the Backup Vaults. Required when a plan is using a LAG Vault. | `number` | `null` | no |
 | <a name="deployments_min_retention_days"></a> [min\_retention\_days](#deployments\_min\_retention\_days) | The minimum retention to configure on the Backup Vaults. Required when a plan is using a LAG Vault. | `number` | `null` | no |
 | <a name="deployments_plans"></a> [plans](#deployments\_plans) | A map of backup plans to implement, see [Plans](#plans). | `map(object)` |  | yes |
 | <a name="deployments_restores_enabled"></a> [restores\_enabled](#deployments\_restores\_enabled) | Allow restores within workload accounts. This will share the LAG Vault back to workload accounts through AWS RAM. | `bool` | `false` | no |
 | <a name="deployments_retained_vaults"></a> [retained_vaults](#deployments\_retained\_vaults) | A list of previously deployed Backup Vault configurations. This is used to retain Vaults that were previously configured and are now locked, preventing deletion. This is useful when changing the configuration of a deployment, such as changing the minimum or maximum retention days. | `list(object({ min_retention_days = number, max_retention_days = number, use_logically_air_gapped_vault = optional(bool, false) }))` | `[]` | no |
-| <a name="deployments_targets"></a> [targets](#deployments\_targets) | A list of Organizational Unit IDs to deploy the backup solution to. The module will deploy to all accounts within these OUs. | `list(string)` |  | yes |
 <!-- prettier-ignore-end -->
 
 ### Plans
