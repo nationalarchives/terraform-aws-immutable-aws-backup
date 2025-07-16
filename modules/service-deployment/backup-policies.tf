@@ -2,7 +2,6 @@
 locals {
   # Resource types (documented at https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_backup_syntax.html#backup-plan-selections)
   resource_types_with_lag_support = [
-    # TODO: Add FSx support, difficult because support depends on the FSx type and ARNs are all the same
     "arn:aws:ec2:*:*:instance/*",                  # EC2
     "arn:aws:s3:::*",                              # S3
     "arn:aws:ec2:*:*:volume/*",                    # EBS
@@ -15,6 +14,8 @@ locals {
     "arn:aws:dynamodb:*:*:table/*",                # DynamoDB
   ]
   resource_types_without_lag_support = [
+    "arn:aws:fsx:*:*:file-system/*",  # FSx File Systems (FSx for ONTAP does not support LAG vaults)
+    "arn:aws:fsx:*:*:volume/*",       # FSx File Systems (FSx for ONTAP does not support LAG vaults)
     "arn:aws:rds:*:*:db:*",           # RDS Database Instance
     "arn:aws:redshift:*:*:cluster:*", # Redshift
     "arn:aws:ssm-sap:*:*:HANA/*",     # SAP HANA
