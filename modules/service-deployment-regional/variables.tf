@@ -84,9 +84,10 @@ variable "region" {
 
 variable "stepfunctions" {
   type = object({
+    ingest_eventbridge_target_role_arn = string
     ingest_state_machine_name          = string
     ingest_state_machine_role_arn      = string
-    ingest_eventbridge_target_role_arn = string
+    ingest_state_role_arn              = string
   })
 }
 

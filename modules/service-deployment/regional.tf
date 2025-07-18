@@ -54,6 +54,7 @@ module "region" {
   stepfunctions = {
     ingest_state_machine_name          = local.ingest_state_machine_name
     ingest_state_machine_role_arn      = module.backup_ingest_sfn_role.role.arn
+    ingest_state_role_arn              = module.backup_ingest_sfn_state_role.role.arn
     ingest_eventbridge_target_role_arn = module.backup_ingest_eventbridge_role.role.arn
   }
 }

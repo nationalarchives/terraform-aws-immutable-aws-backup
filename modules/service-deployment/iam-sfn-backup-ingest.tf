@@ -147,3 +147,38 @@ module "backup_ingest_sfn_role" {
     ]
   })
 }
+
+#
+# IAM Role for the Backup Ingest Step Function to assume within states
+# This is required to prevent a self-assuming role which could enable persistence.
+#
+module "backup_ingest_sfn_state_role" {
+  source = "../iam-role"
+
+  name = "${local.ingest_state_machine_name}-sfn-states"
+  assume_role_policy = jsonencode({
+    Version : "2012-10-17",
+    Statement : [
+      {
+        Effect : "Allow",
+        Principal : {
+          AWS : module.backup_ingest_sfn_role.role.arn
+        },
+        Action : "sts:AssumeRole"
+      }
+    ]
+  })
+  inline_policy = jsonencode({
+    Version : "2012-10-17"
+    Statement : [
+      {
+        Effect : "Allow",
+        Action : [
+          "backup:ListTags",
+          "backup:UpdateRecoveryPointLifecycle"
+        ],
+        Resource : "*"
+      }
+    ]
+  })
+}
