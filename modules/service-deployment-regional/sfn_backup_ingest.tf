@@ -97,7 +97,7 @@ resource "aws_sfn_state_machine" "backup_ingest" {
         "Output" : "{% $states.input %}",
         "Assign" : {
           "destinationBackupVaultName" : "{% $match($destinationBackupVaultArn, /backup-vault:([^:]*)/).groups[0] %}",
-          "sourceAccountBackupServiceRoleArn" : "{% 'arn:' & $partitionId & ':iam::' & $sourceAccountNumber & ':role/' & $memberAccountBackupServiceRoleName %}",
+          "sourceBackupServiceRoleArn" : "{% $sourceAccountNumber = $accountId ? $backupIngestSfnStateRoleArn : 'arn:' & $partitionId & ':iam::' & $sourceAccountNumber & ':role/' & $memberAccountBackupServiceRoleName %}",
           "sourceBackupVaultName" : "{% $match($sourceBackupVaultArn, /backup-vault:([^:]*)/).groups[0] %}",
         },
         "Next" : "EventType?"
@@ -147,7 +147,7 @@ resource "aws_sfn_state_machine" "backup_ingest" {
       "GetSourceRecoveryPointTags" : {
         "Type" : "Task",
         "Resource" : "arn:aws:states:::aws-sdk:backup:listTags",
-        "Credentials" : { "RoleArn" : "{% $sourceAccountNumber = $accountId ? $backupIngestSfnStateRoleArn : $sourceAccountBackupServiceRoleArn %}" },
+        "Credentials" : { "RoleArn" : "{%  $sourceBackupServiceRoleArn %}" },
         "Arguments" : {
           "ResourceArn" : "{% $sourceRecoveryPointArn %}"
         },
@@ -160,7 +160,7 @@ resource "aws_sfn_state_machine" "backup_ingest" {
       "UpdateSourceRecoveryPointLifecycle" : {
         "Type" : "Task",
         "Resource" : "arn:aws:states:::aws-sdk:backup:updateRecoveryPointLifecycle",
-        "Credentials" : { "RoleArn" : "{% $sourceAccountNumber = $accountId ? $backupIngestSfnStateRoleArn : $sourceAccountBackupServiceRoleArn %}" },
+        "Credentials" : { "RoleArn" : "{% $sourceBackupServiceRoleArn %}" },
         "Arguments" : {
           "BackupVaultName" : "{% $sourceBackupVaultName %}",
           "RecoveryPointArn" : "{% $sourceRecoveryPointArn %}",
