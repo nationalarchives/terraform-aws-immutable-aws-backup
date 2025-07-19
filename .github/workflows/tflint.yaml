@@ -3,6 +3,9 @@ name: Run TFLint
 on:
   workflow_call:
 
+permissions:
+  contents: read
+
 jobs:
   tflint:
     runs-on: ubuntu-latest
