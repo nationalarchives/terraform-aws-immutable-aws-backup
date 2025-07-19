@@ -1,4 +1,4 @@
-name: Lint and Validate Terraform
+name: Lint and validate Terraform
 
 on:
   push:
@@ -39,4 +39,4 @@ jobs:
   call_tflint_workflow:
     name: Run TFLint
     needs: terraform_validation
-    uses: ./.github/workflows/tflint.yaml
+    uses: ./.github/workflows/tflint.yml
