@@ -1,11 +1,15 @@
-name: Infrastructure Checks
+name: Lint and Validate Terraform
 
 on:
   push:
     paths:
-      - '**/*.tf'
-      - '.github/workflows/infrastructure-checks.yml'
+      - "**/*.tf"
+      - ".github/workflows/lint-and-validate-terraform.yml"
   workflow_dispatch:
+
+permissions:
+  contents: read
+  checks: write
 
 jobs:
   terraform_validation:
@@ -15,27 +19,21 @@ jobs:
       run:
         shell: bash
     steps:
-      - name: Harden the runner (Audit all outbound calls)
+      - name: Harden the runner (audit all outbound calls)
         uses: step-security/harden-runner@6c439dc8bdf85cadbbce9ed30d1c7b959517bc49 # v2.12.2
         with:
           egress-policy: audit
-
-      - name: Checkout Repository
+      - name: Checkout repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.4.2
-
-      - name: Setup Terraform
-        # This action installs a specific version of Terraform.
+      - name: Install Terraform
         uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
         with:
-          terraform_version: 1.9.0 
-
-      - name: Terraform Format Check
+          terraform_version: 1.9.0
+      - name: terraform fmt -check=true -recursive
         run: terraform fmt -check=true -recursive
-
-      - name: Terraform Init
+      - name: terraform init -backend=false
         run: terraform init -backend=false
-
-      - name: Terraform Validate
+      - name: terraform validate
         run: terraform validate
 
   call_tflint_workflow:
