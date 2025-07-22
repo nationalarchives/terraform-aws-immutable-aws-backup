@@ -31,10 +31,9 @@ module "immutable_aws_backup" {
 
   deployments = {
     "website-service" = {
-      targets            = ["ou-abcd-defghijk"]
+      backup_targets     = ["ou-abcd-defghijk"]
       min_retention_days = 7
       max_retention_days = 90
-      restores_enabled   = false
       backup_tag_key     = "BackupPlan"
       plans = {
         "GFS-7-28-90" : {
