@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    <url>
+         <loc>https://nationalarchives.github.io/terraform-aws-immutable-aws-backup/</loc>
+         <lastmod>2025-07-22</lastmod>
+    </url>
+    <url>
+         <loc>https://nationalarchives.github.io/terraform-aws-immutable-aws-backup/architecture/</loc>
+         <lastmod>2025-07-22</lastmod>
+    </url>
+    <url>
+         <loc>https://nationalarchives.github.io/terraform-aws-immutable-aws-backup/org-policy/</loc>
+         <lastmod>2025-07-22</lastmod>
+    </url>
+    <url>
+         <loc>https://nationalarchives.github.io/terraform-aws-immutable-aws-backup/usage/</loc>
+         <lastmod>2025-07-22</lastmod>
+    </url>
+    <url>
+         <loc>https://nationalarchives.github.io/terraform-aws-immutable-aws-backup/why-use-this-module/</loc>
+         <lastmod>2025-07-22</lastmod>
+    </url>
+</urlset>
