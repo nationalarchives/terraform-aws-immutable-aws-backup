@@ -79,28 +79,6 @@ module "backup_ingest_sfn_role" {
         "Resource" : "*"
       },
       {
-        "Sid" : "AllowGetTags",
-        "Effect" : "Allow",
-        "Action" : [
-          "backup-gateway:ListTagsForResource",
-          "dsql:ListTagsForResource",
-          "dynamodb:ListTagsOfResource",
-          "ec2:DescribeTags",
-          "elasticfilesystem:DescribeTags",
-          "fsx:ListTagsForResource",
-          "rds:ListTagsForResource",
-          "redshift-serverless:ListTagsForResource",
-          "redshift:DescribeTags",
-          "s3:GetBucketTagging",
-          "s3:GetObjectTagging",
-          "s3:GetObjectVersionTagging",
-          "ssm-sap:ListTagsForResource",
-          "storagegateway:ListTagsForResource",
-          "timestream:ListTagsForResource",
-        ],
-        "Resource" : "*"
-      },
-      {
         "Sid" : "AllowBackupCopyJob",
         "Effect" : "Allow",
         "Action" : [
@@ -172,9 +150,31 @@ module "backup_ingest_sfn_state_role" {
     Version : "2012-10-17"
     Statement : [
       {
+        "Sid" : "AllowGetTags",
+        "Effect" : "Allow",
+        "Action" : [
+          "backup:ListTags",
+          "backup-gateway:ListTagsForResource",
+          "dsql:ListTagsForResource",
+          "dynamodb:ListTagsOfResource",
+          "ec2:DescribeTags",
+          "elasticfilesystem:DescribeTags",
+          "fsx:ListTagsForResource",
+          "rds:ListTagsForResource",
+          "redshift-serverless:ListTagsForResource",
+          "redshift:DescribeTags",
+          "s3:GetBucketTagging",
+          "s3:GetObjectTagging",
+          "s3:GetObjectVersionTagging",
+          "ssm-sap:ListTagsForResource",
+          "storagegateway:ListTagsForResource",
+          "timestream:ListTagsForResource",
+        ],
+        "Resource" : "*"
+      },
+      {
         Effect : "Allow",
         Action : [
-          "backup:ListTags",
           "backup:UpdateRecoveryPointLifecycle"
         ],
         Resource : "*"
