@@ -19,10 +19,12 @@ jobs:
       - name: Install TFLint
         uses: terraform-linters/setup-tflint@90f302c255ef959cbfb4bd10581afecdb7ece3e6 # v4.1.1
         with:
-          tflint_version: v0.58.0
+          tflint_version: v0.58.1
           checksums: |
-            1e8ccdf3e4b57ba154545b4343621bf46f25ca8f5cc97e36432469752f7ef0c0
+            2fea1af8e8602d4d9e4253a588ac66f17bf36152cafb51f4d929b8bc6335e740
       - name: tflint --init
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: tflint --init
       - name: tflint
         run: tflint
