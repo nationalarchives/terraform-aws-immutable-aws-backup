@@ -75,11 +75,11 @@ resource "aws_backup_vault" "standard" {
 resource "aws_backup_vault_lock_configuration" "standard" {
   for_each = toset(var.backup_vaults.standard_vaults)
 
-  region            = var.region
-  backup_vault_name = aws_backup_vault.standard[each.key].name
-  # changeable_for_days = 14
-  max_retention_days = split("-", each.key)[1]
-  min_retention_days = split("-", each.key)[0]
+  region              = var.region
+  backup_vault_name   = aws_backup_vault.standard[each.key].name
+  changeable_for_days = 3
+  max_retention_days  = split("-", each.key)[1]
+  min_retention_days  = split("-", each.key)[0]
 }
 
 #
