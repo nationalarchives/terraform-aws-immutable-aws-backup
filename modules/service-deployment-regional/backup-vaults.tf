@@ -12,7 +12,7 @@ locals {
         Resource : "*",
         Condition : {
           ArnLike : {
-            "aws:PrincipalArn" : "arn:${var.current_aws_partition}:iam::*:role/${var.member_account_backup_service_role_name}"
+            "aws:PrincipalArn" : "arn:${var.current.partition}:iam::*:role/${var.deployment.member_account_backup_service_role_name}"
           },
           "ForAnyValue:StringLike" : {
             "aws:PrincipalOrgPaths" : var.deployment.ou_paths_including_children

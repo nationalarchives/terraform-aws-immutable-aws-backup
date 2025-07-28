@@ -5,6 +5,7 @@ locals {
   central_account_resource_name_prefix = "${var.central_account_resource_name_prefix}${var.service_name}"
   event_bus_name                       = local.central_account_resource_name_prefix
   ingest_state_machine_name            = join("", [local.central_account_resource_name_prefix, "-backup-ingest"])
+  restore_state_machine_name           = join("", [local.central_account_resource_name_prefix, "-backup-restore"])
   lag_share_name                       = local.central_account_resource_name_prefix
 
   member_account_resource_name_prefix     = join("", [var.member_account_resource_name_prefix, var.service_name])

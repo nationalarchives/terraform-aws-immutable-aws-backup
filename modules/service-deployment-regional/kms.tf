@@ -1,5 +1,5 @@
 resource "aws_kms_replica_key" "key" {
-  count = var.region != var.current_aws_region ? 1 : 0
+  count = var.region != var.current.region ? 1 : 0
 
   region          = var.region
   primary_key_arn = var.kms.primary_key_arn
@@ -7,7 +7,7 @@ resource "aws_kms_replica_key" "key" {
 }
 
 resource "aws_kms_alias" "key" {
-  count = var.region != var.current_aws_region ? 1 : 0
+  count = var.region != var.current.region ? 1 : 0
 
   region        = var.region
   name          = var.kms.kms_key_alias

@@ -3,6 +3,7 @@ locals {
     { "Fn::GetAtt" : ["DeploymentHelperRole", "Arn"] },
     { "Fn::Sub" : "arn:$${AWS::Partition}:iam::$${AWS::AccountId}:role/$${BackupServiceRoleName}" },
     [for i in var.admin_role_names : { "Fn::Sub" : "arn:$${AWS::Partition}:iam::$${AWS::AccountId}:role/${i}" }],
+    { "Ref" : "CentralBackupServiceRoleArn" }
   ])
 }
 
@@ -15,19 +16,20 @@ resource "aws_cloudformation_stack_set" "member_account_deployments" {
 
   # Try to do as much as possible in native CloudFormation, but some things, like dynamic lists, are only possible in Terraform.
   # jsonencode(jsondecode(...)) used to minify the file.
-  template_body = jsonencode(jsondecode(templatefile("${path.module}/templates/stackset.json.tftpl", {
+  template_body = templatefile("${path.module}/templates/stackset.json.tftpl", {
     central_backup_vault_arn_templates    = [for i in local.central_backup_vault_arns_template : { "Fn::Sub" : replace(replace(i, "<REGION>", "$${AWS::Region}"), var.current.account_id, "$${CentralAccountId}") }],
     member_eventbridge_rule_arn_templates = [for i in var.deployment_regions : { "Fn::Sub" : "arn:${var.current.partition}:events:${i}:$${AWS::AccountId}:rule/${local.member_account_eventbridge_rule_name}" }],
     backup_vault_admin_arn_templates      = local.cfn_backup_vault_admin_arn_templates
-  })))
+  })
 
   parameters = {
     BackupServiceLinkedRoleArn     = var.central_backup_service_linked_role_arn
     BackupServiceRoleName          = local.member_account_backup_service_role_name
     BackupServiceRestoreRoleName   = local.member_account_backup_service_restore_role_name
-    BackupServiceRolePrincipals    = join(", ", [module.backup_ingest_sfn_role.role.arn])
+    BackupServiceRolePrincipals    = join(", ", [module.backup_ingest_sfn_role.role.arn, module.backup_restore_sfn_role.role.arn])
     BackupVaultName                = local.member_account_backup_vault_name
     CentralAccountId               = var.current.account_id
+    CentralBackupServiceRoleArn    = module.backup_service_role.role.arn
     DeploymentHelperRoleArn        = var.central_deployment_helper_role_arn
     DeploymentHelperRoleNamePrefix = replace(var.member_account_deployment_helper_role_name_template, "<REGION>", "")
     DeploymentHelperTopicName      = var.central_deployment_helper_topic_name

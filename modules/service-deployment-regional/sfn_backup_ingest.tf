@@ -15,7 +15,7 @@ resource "aws_cloudwatch_event_rule" "backup_ingest" {
       "$or" : [
         {
           # Member -> Intermediate
-          "sourceBackupVaultArn" : [{ "wildcard" : "arn:*:backup:*:*:backup-vault:${var.member_account_backup_vault_name}" }],
+          "sourceBackupVaultArn" : [{ "wildcard" : "arn:*:backup:*:*:backup-vault:${var.deployment.member_account_backup_vault_name}" }],
           "destinationBackupVaultArn" : [aws_backup_vault.intermediate.arn]
         },
         {
@@ -25,7 +25,7 @@ resource "aws_cloudwatch_event_rule" "backup_ingest" {
         },
         {
           # Member -> LAG
-          "sourceBackupVaultArn" : [{ "wildcard" : "arn:*:backup:*:*:backup-vault:${var.member_account_backup_vault_name}" }],
+          "sourceBackupVaultArn" : [{ "wildcard" : "arn:*:backup:*:*:backup-vault:${var.deployment.member_account_backup_vault_name}" }],
           "destinationBackupVaultArn" : concat([1], values(aws_backup_logically_air_gapped_vault.lag)[*].arn)
         }
       ]
@@ -70,7 +70,7 @@ resource "aws_sfn_state_machine" "backup_ingest" {
         "Type" : "Pass",
         "Output" : "", # Don't output anything to reduce CloudWatch Logs ingest
         "Assign" : {
-          "accountId" : var.current_aws_account_id,
+          "accountId" : var.current.account_id,
           "backupIngestSfnStateRoleArn" : var.stepfunctions.ingest_state_role_arn,
           "centralBackupServiceRoleArn" : var.deployment.backup_service_role_arn,
           "destinationBackupVaultArn" : "{% $states.input.detail.destinationBackupVaultArn %}",
@@ -78,8 +78,8 @@ resource "aws_sfn_state_machine" "backup_ingest" {
           "intermediateBackupVaultArn" : aws_backup_vault.intermediate.arn,
           "jobStatus" : "{% $states.input.detail.state %}",
           "lagBackupVaultNamePrefix" : var.backup_vaults.lag_vault_prefix,
-          "memberAccountBackupServiceRoleName" : var.member_account_backup_service_role_name,
-          "partitionId" : var.current_aws_partition,
+          "memberAccountBackupServiceRoleName" : var.deployment.member_account_backup_service_role_name,
+          "partitionId" : var.current.partition,
           "retentionTags" : {
             "member" : var.backup_policies.local_retention_days_tag,
             "intermediate" : var.backup_policies.intermediate_retention_days_tag,
