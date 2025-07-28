@@ -33,7 +33,7 @@ module "region" {
     standard_vaults             = local.standard_vaults
   }
   deployment = {
-    backup_service_role_arn     = var.central_backup_service_role_arn
+    backup_service_role_arn     = module.backup_service_role.role.arn
     ou_paths_including_children = local.deployment_ou_paths_including_children
   }
   eventbridge = {

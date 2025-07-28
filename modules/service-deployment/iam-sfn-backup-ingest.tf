@@ -107,7 +107,7 @@ module "backup_ingest_sfn_role" {
         "Action" : [
           "iam:PassRole"
         ],
-        "Resource" : var.central_backup_service_role_arn
+        "Resource" : module.backup_service_role.role.arn
       },
       {
         Sid : "AllowAssumeRoleInMemberAccounts",
