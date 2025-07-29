@@ -41,7 +41,7 @@ resource "aws_sfn_state_machine" "backup_restore" {
           "memberAccountBackupVaultName" : var.deployment.member_account_backup_vault_name,
           "memberAccountRestoreVaultName" : var.deployment.member_account_restore_vault_name,
           "standardBackupVaultArns" : values(aws_backup_vault.standard)[*].arn,
-          "waitSeconds" : 30
+          "waitSeconds" : 180
         },
         "Output" : "{% $states.input %}"
         "Next" : "SourceVault?"
