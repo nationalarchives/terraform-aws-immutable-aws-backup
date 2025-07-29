@@ -16,25 +16,23 @@ variable "backup_vaults" {
   })
 }
 
-variable "current_aws_account_id" {
-  description = "The AWS account ID where Terraform is being executed."
-  type        = string
-}
-
-variable "current_aws_partition" {
-  description = "The current AWS partition (e.g., aws, aws-cn, aws-us-gov) where Terraform is being executed."
-  type        = string
-}
-
-variable "current_aws_region" {
-  description = "The current AWS region where Terraform is being executed."
-  type        = string
+variable "current" {
+  description = "The current AWS account ID, organization, partition, and region."
+  type = object({
+    account_id : string
+    partition : string
+    region : string
+  })
 }
 
 variable "deployment" {
   type = object({
-    backup_service_role_arn     = string
-    ou_paths_including_children = list(string),
+    backup_service_role_arn                 = string
+    member_account_backup_service_role_name = string
+    member_account_backup_vault_name        = string
+    member_account_eventbridge_rule_name    = string
+    member_account_restore_vault_name       = string
+    ou_paths_including_children             = list(string)
   })
 }
 
@@ -52,21 +50,6 @@ variable "kms" {
     kms_key_policy  = string
     primary_key_arn = string
   })
-}
-
-variable "member_account_backup_service_role_name" {
-  description = "The name of the backup service role in member accounts."
-  type        = string
-}
-
-variable "member_account_eventbridge_rule_name" {
-  description = "The name of the EventBridge rule in member accounts."
-  type        = string
-}
-
-variable "member_account_backup_vault_name" {
-  description = "The name of the backup vault in member accounts."
-  type        = string
 }
 
 variable "ram" {
@@ -88,6 +71,8 @@ variable "stepfunctions" {
     ingest_state_machine_name          = string
     ingest_state_machine_role_arn      = string
     ingest_state_role_arn              = string
+    restore_state_machine_name         = string
+    restore_state_machine_role_arn     = string
   })
 }
 

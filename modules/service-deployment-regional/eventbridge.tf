@@ -22,7 +22,7 @@ resource "aws_cloudwatch_event_bus_policy" "event_bus" {
         Resource : "*",
         Condition : {
           ArnLike : {
-            "aws:PrincipalArn" : "arn:${var.current_aws_partition}:iam::*:role/${var.member_account_eventbridge_rule_name}",
+            "aws:PrincipalArn" : "arn:${var.current.partition}:iam::*:role/${var.deployment.member_account_eventbridge_rule_name}",
           },
           "ForAnyValue:StringLike" : {
             "aws:PrincipalOrgPaths" : var.deployment.ou_paths_including_children
@@ -93,7 +93,7 @@ resource "aws_cloudwatch_event_rule" "default_to_event_bus" {
     "detail-type" : ["Backup Job State Change", "Copy Job State Change"],
     "detail" : {
       "$or" : [
-        { "backupVaultName" : [var.member_account_backup_vault_name] },
+        { "backupVaultName" : [var.deployment.member_account_backup_vault_name] },
         { "sourceBackupVaultArn" : local.central_backup_vault_arns },
         { "destinationBackupVaultArn" : local.central_backup_vault_arns }
       ]

@@ -21,11 +21,6 @@ variable "backup_tag_key" {
   }
 }
 
-variable "central_backup_service_role_arn" {
-  description = "The ARN of the central backup service role, used to copy backups between vaults."
-  type        = string
-}
-
 variable "central_backup_service_linked_role_arn" {
   description = "The ARN of the AWS Backup service-linked role in the central account. Required to be added to custom KMS Key Policies in member accounts."
   type        = string

@@ -46,7 +46,6 @@ module "deployment" {
   }
   central_account_resource_name_prefix                = var.central_account_resource_name_prefix
   central_backup_service_linked_role_arn              = local.backup_service_linked_role_arn
-  central_backup_service_role_arn                     = module.backup_service_role.role.arn
   central_deployment_helper_role_arn                  = module.deployment_helper.lambda_role.arn
   central_deployment_helper_topic_name                = module.deployment_helper.sns_topic.name
   deployment_regions                                  = local.deployment_regions

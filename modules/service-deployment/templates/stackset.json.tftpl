@@ -1,4 +1,7 @@
-{
+${jsonencode({
+  # This is a Terraform template file to create an AWS CloudFormation template; it uses the jsonencode function to export the template as JSON.
+  # Use of CloudFormation pseudo parameters must be escaped from Terraform with `$$`. For example, `$${AWS::Region}`.
+
   "AWSTemplateFormatVersion": "2010-09-09",
   "Parameters": {
     "BackupServiceRoleName": {
@@ -20,6 +23,9 @@
     "CentralAccountId": {
       "Type": "String",
       "Description": "The AWS Account ID of the central account."
+    },
+    "CentralBackupServiceRoleArn": {
+      "Type": "String"
     },
     "EventBusName": {
       "Type": "String"
@@ -112,12 +118,35 @@
               "Version": "2012-10-17",
               "Statement": [
                 {
+                  "Sid": "AllowUpdateLifecycle",
                   "Effect": "Allow",
                   "Action": [
-                    "backup:UpdateRecoveryPointLifecycle",
-                    "backup:ListTags"
+                    "backup:UpdateRecoveryPointLifecycle"
                   ],
                   "Resource": "*"
+                },
+                {
+                  "Sid": "AllowStartCopy",
+                  "Effect": "Allow",
+                  "Action": [
+                    "backup:DescribeCopyJob",
+                    "backup:ListTags",
+                    "backup:StartCopyJob"
+                  ],
+                  "Resource": "*"
+                },
+                {
+                  "Sid": "AllowPassSelfToCopyJobs",
+                  "Effect": "Allow",
+                  "Action": [
+                    "iam:PassRole"
+                  ],
+                  "Resource": { "Fn::Sub": "arn:$${AWS::Partition}:iam::$${AWS::AccountId}:role/$${BackupServiceRoleName}" },
+                  "Condition": {
+                    "StringEquals": {
+                      "iam:PassedToService": "backup.amazonaws.com"
+                    }
+                  }
                 }
               ]
             }
@@ -189,6 +218,7 @@
             "Version": "2012-10-17",
             "Statement": [
               {
+                "Sid": "ProtectVaultAndContents",
                 "Effect": "Deny",
                 "Principal": {
                   "AWS": "*"
@@ -210,13 +240,18 @@
                 "Resource": "*",
                 "Condition": {
                   "ArnNotLike": {
-                    "aws:PrincipalArn": [
-                      { "Fn::GetAtt": ["DeploymentHelperRole", "Arn"] },
-                      { "Fn::Sub": "arn:$${AWS::Partition}:iam::$${AWS::AccountId}:role/$${BackupServiceRoleName}" },
-                      { "Fn::Sub": "arn:$${AWS::Partition}:iam::$${AWS::AccountId}:role/OrganizationAccountAccessRole" }
-                    ]
+                    "aws:PrincipalArn": backup_vault_admin_arn_templates
                   }
                 }
+              },
+              {
+                "Sid": "AllowCopiesForRestores",
+                "Effect": "Allow",
+                "Principal": {
+                  "AWS": [{ "Ref": "CentralBackupServiceRoleArn" }]
+                },
+                "Action": ["backup:CopyIntoBackupVault"],
+                "Resource": "*"
               }
             ]
           }
@@ -265,7 +300,7 @@
               "Action": ["sts:AssumeRole"],
               "Condition": {
                 "ArnEquals": {
-                  "aws:SourceArn": ${jsonencode(member_eventbridge_rule_arn_templates)}
+                  "aws:SourceArn": member_eventbridge_rule_arn_templates
                 }
               }
             }
@@ -300,8 +335,8 @@
           "detail": {
             "$or": [
               { "backupVaultName": [{ "Ref": "BackupVaultName" }] },
-              { "sourceBackupVaultArn": ${jsonencode(central_backup_vault_arn_templates)} },
-              { "destinationBackupVaultArn": ${jsonencode(central_backup_vault_arn_templates)} }
+              { "sourceBackupVaultArn": central_backup_vault_arn_templates },
+              { "destinationBackupVaultArn": central_backup_vault_arn_templates }
             ]
           }
         },
@@ -361,14 +396,11 @@
                 "Resource": "*",
                 "Condition": {
                   "ArnNotLike": {
-                    "aws:PrincipalArn": [
-                      { "Fn::GetAtt": ["DeploymentHelperRole", "Arn"] },
-                      { "Fn::Sub": "arn:$${AWS::Partition}:iam::$${AWS::AccountId}:role/$${BackupServiceRoleName}" },
-                      { "Fn::Sub": "arn:$${AWS::Partition}:iam::$${AWS::AccountId}:role/OrganizationAccountAccessRole" }
-                    ]
+                    "aws:PrincipalArn": backup_vault_admin_arn_templates
                   }
                 }
               }
+              # BackupServiceRole is allowed to copy into the restore vault via same-account permission policy.
             ]
           }
         }
@@ -381,4 +413,4 @@
       "Value": { "Ref": "BackupServiceLinkedRoleArn" }
     }
   }
-}
+})}

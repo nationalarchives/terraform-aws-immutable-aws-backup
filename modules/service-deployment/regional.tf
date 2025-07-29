@@ -11,15 +11,7 @@ module "region" {
   source   = "../service-deployment-regional"
   for_each = toset(var.deployment_regions)
 
-  region                 = each.value
-  current_aws_account_id = var.current.account_id
-  current_aws_partition  = var.current.partition
-  current_aws_region     = var.current.region
-
-  member_account_backup_service_role_name = local.member_account_backup_service_role_name
-  member_account_eventbridge_rule_name    = local.member_account_eventbridge_rule_name
-  member_account_backup_vault_name        = local.member_account_backup_vault_name
-
+  region = each.value
   backup_policies = {
     intermediate_retention_days_tag = local.intermediate_retention_days_tag
     local_retention_days_tag        = local.local_retention_days_tag
@@ -32,9 +24,18 @@ module "region" {
     standard_vault_prefix       = local.standard_vault_prefix
     standard_vaults             = local.standard_vaults
   }
+  current = {
+    account_id = var.current.account_id
+    partition  = var.current.partition
+    region     = each.value
+  }
   deployment = {
-    backup_service_role_arn     = var.central_backup_service_role_arn
-    ou_paths_including_children = local.deployment_ou_paths_including_children
+    backup_service_role_arn                 = module.backup_service_role.role.arn
+    member_account_backup_service_role_name = local.member_account_backup_service_role_name
+    member_account_eventbridge_rule_name    = local.member_account_eventbridge_rule_name
+    member_account_backup_vault_name        = local.member_account_backup_vault_name
+    member_account_restore_vault_name       = local.member_account_restore_vault_name
+    ou_paths_including_children             = local.deployment_ou_paths_including_children
   }
   eventbridge = {
     bus_name               = local.event_bus_name
@@ -56,5 +57,7 @@ module "region" {
     ingest_state_machine_role_arn      = module.backup_ingest_sfn_role.role.arn
     ingest_state_role_arn              = module.backup_ingest_sfn_state_role.role.arn
     ingest_eventbridge_target_role_arn = module.backup_ingest_eventbridge_role.role.arn
+    restore_state_machine_name         = local.restore_state_machine_name
+    restore_state_machine_role_arn     = module.backup_restore_sfn_role.role.arn
   }
 }
