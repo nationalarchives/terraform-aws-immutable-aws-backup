@@ -60,69 +60,8 @@ module "backup_ingest_sfn_role" {
   })
   inline_policy = jsonencode({
     Version : "2012-10-17"
-    Statement : [
-      {
-        "Sid" : "AllowLogDelivery",
-        "Effect" : "Allow",
-        "Action" : [
-          "logs:CreateLogDelivery",
-          "logs:CreateLogStream",
-          "logs:GetLogDelivery",
-          "logs:UpdateLogDelivery",
-          "logs:DeleteLogDelivery",
-          "logs:ListLogDeliveries",
-          "logs:PutLogEvents",
-          "logs:PutResourcePolicy",
-          "logs:DescribeResourcePolicies",
-          "logs:DescribeLogGroups"
-        ],
-        "Resource" : "*"
-      },
-      {
-        "Sid" : "AllowBackupCopyJob",
-        "Effect" : "Allow",
-        "Action" : [
-          "backup:DescribeCopyJob",
-          "backup:StartCopyJob",
-          "backup:UpdateRecoveryPointLifecycle",
-          "backup:ListTags"
-        ],
-        "Resource" : "*"
-      },
-      {
-        "Sid" : "AllowBackupVaultAccess",
-        "Effect" : "Allow",
-        "Action" : [
-          "backup:DescribeBackupVault",
-          "backup:ListRecoveryPointsByBackupVault"
-        ],
-        "Resource" : flatten([
-          [for i in var.deployment_regions : replace(local.current_standard_vault_arn_template, "<REGION>", i)],
-          [for i in var.deployment_regions : replace(local.intermediate_vault_arn_template, "<REGION>", i)],
-        ])
-      },
-      {
-        "Sid" : "AllowPassRole",
-        "Effect" : "Allow",
-        "Action" : [
-          "iam:PassRole"
-        ],
-        "Resource" : module.backup_service_role.role.arn
-      },
-      {
-        Sid : "AllowAssumeRoleInMemberAccounts",
-        Effect : "Allow",
-        Action : [
-          "sts:AssumeRole"
-        ],
-        Resource : "arn:aws:iam::*:role/${local.member_account_backup_service_role_name}",
-        Condition : {
-          "ForAnyValue:StringLike" : {
-            "aws:ResourceOrgPaths" : local.deployment_ou_paths_including_children
-          }
-        }
-      }
-    ]
+    Statement : local.step_function_role_policy_statements
+    # Can assume the backup_ingest_sfn_state_role through same-account trust policy
   })
 }
 

@@ -24,24 +24,6 @@ module "backup_restore_sfn_role" {
   })
   inline_policy = jsonencode({
     Version : "2012-10-17"
-    Statement : [
-      {
-        "Sid" : "AllowLogDelivery",
-        "Effect" : "Allow",
-        "Action" : [
-          "logs:CreateLogDelivery",
-          "logs:CreateLogStream",
-          "logs:GetLogDelivery",
-          "logs:UpdateLogDelivery",
-          "logs:DeleteLogDelivery",
-          "logs:ListLogDeliveries",
-          "logs:PutLogEvents",
-          "logs:PutResourcePolicy",
-          "logs:DescribeResourcePolicies",
-          "logs:DescribeLogGroups"
-        ],
-        "Resource" : "*"
-      }
-    ]
+    Statement : local.step_function_role_policy_statements
   })
 }

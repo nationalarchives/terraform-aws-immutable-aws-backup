@@ -8,9 +8,8 @@ resource "aws_cloudwatch_log_group" "backup_restore" {
 }
 
 resource "aws_sfn_state_machine" "backup_restore" {
-  name = var.stepfunctions.restore_state_machine_name
-  #TODO: Fix this
-  role_arn = var.stepfunctions.ingest_state_machine_role_arn
+  name     = var.stepfunctions.restore_state_machine_name
+  role_arn = var.stepfunctions.restore_state_machine_role_arn
 
   logging_configuration {
     level                  = "ALL"
