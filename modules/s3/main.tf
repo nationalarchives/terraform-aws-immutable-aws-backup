@@ -56,6 +56,14 @@ resource "aws_s3_bucket_public_access_block" "bucket" {
   skip_destroy            = var.bpa_skip_destroy
 }
 
+resource "aws_s3_bucket_policy" "bucket" {
+  bucket = aws_s3_bucket.bucket.id
+  policy = templatefile("${path.module}/templates/secure-transport.json", {
+    bucket_name = aws_s3_bucket.bucket.id,
+  })
+  depends_on = [aws_s3_bucket_public_access_block.bucket]
+}
+
 resource "aws_s3_bucket_ownership_controls" "bucket" {
   bucket = aws_s3_bucket.bucket.id
 
