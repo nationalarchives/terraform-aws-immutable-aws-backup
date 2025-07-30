@@ -24,7 +24,7 @@ module "lambda_role" {
           "s3:GetBucketLocation",
           "s3:ListBucket"
         ]
-        Resource : "arn:${var.current.partition}:s3:::${var.terraform_state_bucket_name}"
+        Resource : local.terraform_state_bucket_arn
       },
       {
         Effect : "Allow"
@@ -33,7 +33,7 @@ module "lambda_role" {
           "s3:PutObject",
           "s3:DeleteObject"
         ]
-        Resource : "arn:${var.current.partition}:s3:::${var.terraform_state_bucket_name}/*"
+        Resource : "${local.terraform_state_bucket_arn}/*"
       },
       {
         Effect : "Allow"

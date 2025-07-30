@@ -9,5 +9,5 @@ module "deployment_helper_regional" {
   }
   lambda_function_name        = var.lambda_function_name
   lambda_role_arn             = module.lambda_role.role.arn
-  terraform_state_bucket_name = var.terraform_state_bucket_name
+  terraform_state_bucket_name = local.terraform_state_bucket_name
 }

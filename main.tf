@@ -20,8 +20,9 @@ module "deployment_helper" {
   }
   deployment_regions                                 = local.deployment_regions
   lambda_function_name                               = join("", [var.central_account_resource_name_prefix, "deployment-helper"])
+  central_account_resource_name_prefix               = var.central_account_resource_name_prefix
   member_account_deployment_helper_role_arn_patterns = [for i in local.member_account_deployment_helper_role_names : join("", ["arn:", local.partition_id, ":iam::*:role/", i])]
-  terraform_state_bucket_name                        = local.terraform_state_bucket_name
+  terraform_state_bucket_name                        = var.terraform_state_bucket_name
 }
 
 module "deployment" {
@@ -51,11 +52,4 @@ module "deployment" {
   deployment_regions                                  = local.deployment_regions
   member_account_deployment_helper_role_name_template = replace(local.member_account_deployment_helper_role_name_template, "<SERVICE>", each.key)
   member_account_resource_name_prefix                 = var.member_account_resource_name_prefix
-}
-
-module "tf_state_bucket" {
-  source = "./modules/s3"
-  count  = var.terraform_state_bucket_name == "" ? 1 : 0
-
-  central_account_resource_name_prefix = var.central_account_resource_name_prefix
 }
