@@ -1,4 +1,5 @@
 variable "central_account_resource_name_prefix" {
+  type        = string
   description = "Central account resource name prefix, e.g. aws-backup-"
 
   validation {
@@ -8,11 +9,13 @@ variable "central_account_resource_name_prefix" {
 }
 
 variable "kms_key_arn" {
+  type        = string
   description = "ARN of KMS key for S3 bucket encryption, if omitted, S3 managed key will be used"
   default     = ""
 }
 
 variable "log_bucket" {
+  type        = string
   description = "Enter name of log bucket to enable access logs"
   default     = ""
 }
@@ -23,6 +26,7 @@ variable "force_destroy" {
 }
 
 variable "object_ownership" {
+  type        = string
   description = "manage S3 bucket ownership controls"
   default     = "BucketOwnerEnforced"
   validation {
@@ -32,27 +36,37 @@ variable "object_ownership" {
 }
 
 variable "block_public_acls" {
-  default = true
+  type        = bool
+  description = "Block public ACLs on the S3 bucket"
+  default     = true
 }
 
 variable "block_public_policy" {
-  default = true
+  type        = bool
+  description = "Block public bucket policies on the S3 bucket"
+  default     = true
 }
 
 variable "ignore_public_acls" {
-  default = true
+  type        = bool
+  description = "Ignore public ACLs on the S3 bucket"
+  default     = true
 }
 
 variable "restrict_public_buckets" {
-  default = true
+  type        = bool
+  description = "Restrict public bucket policies on the S3 bucket"
+  default     = true
 }
 
 variable "bpa_skip_destroy" {
+  type        = bool
   description = "Skip destroy of S3 block public access configuration"
   default     = true
 }
 
 variable "versioning" {
+  type        = string
   description = "Enable versioning"
   default     = "Enabled"
   validation {
