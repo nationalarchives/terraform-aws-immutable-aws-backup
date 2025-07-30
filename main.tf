@@ -20,6 +20,7 @@ module "deployment_helper" {
   }
   deployment_regions                                 = local.deployment_regions
   lambda_function_name                               = join("", [var.central_account_resource_name_prefix, "deployment-helper"])
+  central_account_resource_name_prefix               = var.central_account_resource_name_prefix
   member_account_deployment_helper_role_arn_patterns = [for i in local.member_account_deployment_helper_role_names : join("", ["arn:", local.partition_id, ":iam::*:role/", i])]
   terraform_state_bucket_name                        = var.terraform_state_bucket_name
 }

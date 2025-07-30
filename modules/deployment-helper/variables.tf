@@ -17,6 +17,11 @@ variable "lambda_function_name" {
   type        = string
 }
 
+variable "central_account_resource_name_prefix" {
+  type        = string
+  description = "Prefix to be used for resource names in the central account."
+}
+
 variable "member_account_deployment_helper_role_arn_patterns" {
   description = "The patterns to use to restrict role assumption to the member account Deployment Helper roles."
   type        = list(string)

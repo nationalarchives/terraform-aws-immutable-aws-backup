@@ -5,7 +5,6 @@ module "aws_backup" {
 
   central_account_resource_name_prefix = local.resource_name_prefix
   member_account_resource_name_prefix  = "org-${local.resource_name_prefix}"
-  terraform_state_bucket_name          = var.terraform_state_bucket
   deployments = {
     "ca-prod" = {
       backup_targets                  = [module.ou_data_lookup.by_name_path["Workloads / Serverless / CA / RSA CA"].id]
