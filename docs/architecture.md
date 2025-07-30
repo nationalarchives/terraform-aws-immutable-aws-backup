@@ -17,6 +17,7 @@ However, as CloudFormation is a declarative syntax for provisioning resources, e
 - Deployment helper SNS topic
 - Deployment helper Lambda function
 - AWS Backup Service-linked IAM Role
+- S3 Terraform state bucket for deployments to workload accounts
 
 ## Central account resources per deployment
 
