@@ -1,10 +1,10 @@
-variable "central_account_resource_name_prefix" {
+variable "bucket_prefix" {
   type        = string
-  description = "Central account resource name prefix, e.g. aws-backup-"
+  description = "S3 Terraform state bucket name prefix, e.g. aws-backup-tf-state-"
 
   validation {
-    condition     = length(var.central_account_resource_name_prefix) <= 28
-    error_message = "central_account_resource_name_prefix must be less than or equal to 28 characters"
+    condition     = length(var.bucket_prefix) <= 37
+    error_message = "bucket name prefix must be less than or equal to 37 characters"
   }
 }
 
