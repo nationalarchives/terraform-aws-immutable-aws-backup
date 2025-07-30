@@ -27,7 +27,6 @@ module "immutable_aws_backup" {
 
   central_account_resource_name_prefix = "immutable-aws-backup-"
   member_account_resource_name_prefix  = "orgdeploy-immutable-aws-backup-"
-  terraform_state_bucket_name          = "my-terraform-state-bucket"
 
   deployments = {
     "website-service" = {
