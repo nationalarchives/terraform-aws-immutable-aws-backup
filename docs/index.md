@@ -15,7 +15,7 @@ See [Why use this module?](https://nationalarchives.github.io/terraform-aws-immu
 
 ## Architecture and deployment
 
-The module is designed to be deployed in a dedicated account within an AWS Organization, this account must be [delegated certain abilities for the module to function](https://nationalarchives.github.io/terraform-aws-immutable-aws-backup/usage/). See our [Architecture](https://nationalarchives.github.io/terraform-aws-immutable-aws-backup/architecture/) documentation for a detailed explanation of the architecture and how the module works.
+The module is designed to be deployed in a dedicated account within an AWS Organization, this account must be [delegated certain abilities for the module to function](https://nationalarchives.github.io/terraform-aws-immutable-aws-backup/usage-prerequisites/). See our [Architecture](https://nationalarchives.github.io/terraform-aws-immutable-aws-backup/architecture/) documentation for a detailed explanation of the architecture and how the module works.
 
 ![Architecture Diagram](https://raw.githubusercontent.com/nationalarchives/terraform-aws-immutable-aws-backup/refs/heads/main/docs/assets/images/backup-deployment-architecture.png)
 
