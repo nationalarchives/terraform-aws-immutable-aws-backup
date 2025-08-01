@@ -46,9 +46,11 @@ nav:
   - Home: index.md
   - Why use this module?: why-use-this-module.md
   - Architecture: architecture.md
-  - Usage:
-      - Using the module: usage.md
-      - Organizations policy: org-policy.md
+  - Using the module:
+      - Prerequisites: usage-prerequisites.md
+      - Configuration: usage-configuration.md
+      - Backing up your resources: usage-backing-up-your-resources.md
 
 plugins:
   - social
+  - search
