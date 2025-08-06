@@ -18,6 +18,8 @@ Each deployment orchestrates the creation of resources in both the Backup accoun
 - A Resource Access Manager (RAM) Share to share the Logically Air Gapped (LAG) Vault with the Workload accounts for recovery.
 - A Step Function to manage the copying of backups from the Standard Vault back to workload accounts for recovery.
 
+Additional resources are created in the central Backup account to support deployment to workload accounts, as detailed below.
+
 ## Resources in workload accounts
 
 Each deployment orchestrates the creation of resources in workload accounts through [CloudFormation StackSets](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/what-is-cfnstacksets.html). The module uses CloudFormation as it enables deployment to many AWS accounts without the need to configure and manage a Terraform provider for each account. StackSets work natively within AWS, reacting when accounts are moved between Organizations and Organizational Units to provision and destroy resources depending on their location within an Organization.
