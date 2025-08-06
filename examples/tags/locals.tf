@@ -23,12 +23,12 @@ locals {
         {
           name                = "weekly",
           schedule_expression = local.schedule_weekly
-          delete_after_days   = 30
+          delete_after_days   = 8
         },
         {
           name                = "monthly",
           schedule_expression = local.schedule_monthly
-          delete_after_days   = 90
+          delete_after_days   = 9
         }
       ]
     }
