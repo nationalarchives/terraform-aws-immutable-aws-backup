@@ -10,7 +10,7 @@ This module aims to simplify the process of deploying AWS Backup within an AWS O
 
 ## What about Vault Lock?
 
-Immutability within AWS Backup is achieved through the use of [Compliance mode](https://docs.aws.amazon.com/aws-backup/latest/devguide/vault-lock.html#backup-vault-lock-modes) vault locking. However, whilst this prevents the recovery points within the vault from being deleted, it does not extend the same protections to the KMS Key used to encrypt them. An malicious user would only need to delete this KMS Key to make the data within the backups inaccessible.
+Immutability within AWS Backup is achieved through the use of [Compliance mode](https://docs.aws.amazon.com/aws-backup/latest/devguide/vault-lock.html#backup-vault-lock-modes) vault locking. However, whilst this prevents the recovery points within the vault from being deleted, it does not extend the same protections to the KMS Key used to encrypt them. A malicious user would only need to delete this KMS Key to make the data within the backups inaccessible.
 
 Protecting a KMS Key is much more difficult. Although keys cannot be deleted immediately, they can be scheduled for deletion with only 7 days grace. Keys can be protected through [Key Policies](https://docs.aws.amazon.com/kms/latest/developerguide/key-policies.html), such as removing the ability to schedule key deletions or update the key policy, but this is a known issue within AWS and has a well documented path to recover these abilities through opening a case with AWS Support.
 

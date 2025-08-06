@@ -10,7 +10,7 @@ This document provides guidance on how to back up resources using this Terraform
 
 ### AWS Managed KMS Keys
 
-Immediate backups of resource types that are not "fully managed" by AWS Backup within the will retain the encryption configuration of the source resource, when backups are copied this will change to the encryption key of the destination Backup Vault. Backups of resources that are encrypted with an AWS managed KMS Key - a key with an alias starting `aws/` - [cannot be copied cross-account](https://docs.aws.amazon.com/aws-backup/latest/devguide/encryption.html#copy-encryption) so will fail to copy to the central account Backup Vault to be held immutably.
+Immediate backups of resource types that are not "fully managed" by AWS Backup will retain the encryption configuration of the source resource. When backups are copied, this will change to the encryption key of the destination Backup Vault. Backups of resources that are encrypted with an AWS managed KMS Key - a key with an alias starting `aws/` - [cannot be copied cross-account](https://docs.aws.amazon.com/aws-backup/latest/devguide/encryption.html#copy-encryption) so will fail to copy to the central account Backup Vault to be held immutably.
 
 ### Customer Managed KMS Keys
 
