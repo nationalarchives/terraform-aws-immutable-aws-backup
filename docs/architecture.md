@@ -18,7 +18,7 @@ Each deployment orchestrates the creation of resources in both the Backup accoun
 - A Resource Access Manager (RAM) Share to share the Logically Air Gapped (LAG) Vault with the Workload accounts for recovery.
 - A Step Function to manage the copying of backups from the Standard Vault back to workload accounts for recovery.
 
-Additional resources are created in the central BAckup account to support deployment to workload accounts, as detailed below.
+Additional resources are created in the central Backup account to support deployment to workload accounts, as detailed below.
 
 ## Resources in workload accounts
 
