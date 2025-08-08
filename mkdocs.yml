@@ -50,6 +50,7 @@ nav:
       - Prerequisites: usage-prerequisites.md
       - Configuration: usage-configuration.md
       - Backing up your resources: usage-backing-up-your-resources.md
+      - Restoring your backups: usage-restoring-your-backups.md
 
 plugins:
   - social
