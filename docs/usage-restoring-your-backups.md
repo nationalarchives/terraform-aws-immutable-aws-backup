@@ -6,7 +6,7 @@ Backups can be restored in the dedicated backup account or within the workload a
 
 Logically Air Gapped Vaults allow restores to be performed directly within the workload accounts. The LAG Vault must first be shared with the workload account using AWS RAM, then a principal in the workload account can restore the backup using the AWS Backup console or CLI.
 
-To enable AWS RAM sharing to the workload accounts, set [allow_backup_targets_to_restore](./usage-backing-up-your-resources.md#deployments_allow_backup_targets_to_restore) to `true` within the deployment configuration, then re-apply Terraform.
+To enable AWS RAM sharing to the workload accounts, set [allow_backup_targets_to_restore](./usage-configuration.md#deployments_allow_backup_targets_to_restore) to `true` within the deployment configuration, then re-apply Terraform.
 
 To restore a backup from a LAG Vault, follow the steps in [Restore a backup from a logically air-gapped vault](https://docs.aws.amazon.com/aws-backup/latest/devguide/logicallyairgappedvault.html#lag-restore) from the AWS documentation. The module deploys an IAM Role, `...-backup-service-restore-role`, to each workload account that can be passed to the restore job.
 
