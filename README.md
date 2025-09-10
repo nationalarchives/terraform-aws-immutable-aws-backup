@@ -1,6 +1,6 @@
 # Immutable AWS Backup Terraform module
 
-An open-source Terraform module to deploy and orchestrate AWS Backup for creating fully immutable backups within an AWS Organization.
+An open-source public [Terraform module](https://registry.terraform.io/modules/nationalarchives/immutable-aws-backup/aws/latest) to deploy and orchestrate AWS Backup for creating fully immutable backups within an AWS Organization.
 
 - Manages the deployment of Backup Vaults to member accounts using CloudFormation StackSets.
 - Allows for targetted deployments to specific Organizations Units (OUs) and prevents cross-talk between deployments.
