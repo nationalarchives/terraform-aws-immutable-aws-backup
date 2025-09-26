@@ -5,6 +5,7 @@ locals {
     [for i in var.admin_role_names : { "Fn::Sub" : "arn:$${AWS::Partition}:iam::$${AWS::AccountId}:role/${i}" }],
     { "Ref" : "CentralBackupServiceRoleArn" }
   ])
+  cfn_call_as = var.current.organization_management_account_id == var.current.account_id ? "SELF" : "DELEGATED_ADMIN"
 }
 
 resource "aws_cloudformation_stack_set" "member_account_deployments" {
@@ -12,7 +13,7 @@ resource "aws_cloudformation_stack_set" "member_account_deployments" {
   description      = "Centralised AWS Backup for ${var.service_name}."
   capabilities     = ["CAPABILITY_NAMED_IAM"]
   permission_model = "SERVICE_MANAGED"
-  call_as          = "DELEGATED_ADMIN"
+  call_as          = local.cfn_call_as
 
   # Try to do as much as possible in native CloudFormation, but some things, like dynamic lists, are only possible in Terraform.
   # jsonencode(jsondecode(...)) used to minify the file.
@@ -60,7 +61,7 @@ resource "aws_cloudformation_stack_set" "member_account_deployments" {
 
 resource "aws_cloudformation_stack_instances" "member_account_deployments" {
   stack_set_name = aws_cloudformation_stack_set.member_account_deployments.name
-  call_as        = "DELEGATED_ADMIN"
+  call_as        = local.cfn_call_as
   regions        = var.deployment_regions
   deployment_targets {
     organizational_unit_ids = var.deployment_targets
