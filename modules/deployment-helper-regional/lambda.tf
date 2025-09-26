@@ -30,7 +30,7 @@ resource "aws_lambda_function" "lambda" {
   }
 
   ephemeral_storage {
-    size = 1024
+    size = 2048
   }
 
   depends_on = [aws_cloudwatch_log_group.lambda]
