@@ -1,10 +1,11 @@
 locals {
   # Internal
-  account_id         = data.aws_caller_identity.current.account_id
-  organization_id    = data.aws_organizations_organization.org.id
-  partition_id       = data.aws_partition.current.partition
-  region             = data.aws_region.current.region
-  deployment_regions = [local.region]
+  account_id                         = data.aws_caller_identity.current.account_id
+  organization_id                    = data.aws_organizations_organization.org.id
+  organization_management_account_id = data.aws_organizations_organization.org.master_account_id
+  partition_id                       = data.aws_partition.current.partition
+  region                             = data.aws_region.current.region
+  deployment_regions                 = [local.region]
 
   # Member account deployment role names are templated here but used throughout this module and submodules.
   member_account_deployment_helper_role_name_template = "${var.member_account_resource_name_prefix}<SERVICE>-deployment-helper-<REGION>"
@@ -40,10 +41,11 @@ module "deployment" {
   retained_vaults    = each.value.retained_vaults
 
   current = {
-    account_id      = local.account_id
-    organization_id = local.organization_id
-    partition       = local.partition_id
-    region          = local.region
+    account_id                         = local.account_id
+    organization_id                    = local.organization_id
+    organization_management_account_id = local.organization_management_account_id
+    partition                          = local.partition_id
+    region                             = local.region
   }
   central_account_resource_name_prefix                = var.central_account_resource_name_prefix
   central_backup_service_linked_role_arn              = local.backup_service_linked_role_arn
