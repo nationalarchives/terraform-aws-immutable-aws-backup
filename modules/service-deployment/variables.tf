@@ -49,6 +49,7 @@ variable "current" {
   type = object({
     account_id : string
     organization_id : string
+    organization_management_account_id : string
     partition : string
     region : string
   })
