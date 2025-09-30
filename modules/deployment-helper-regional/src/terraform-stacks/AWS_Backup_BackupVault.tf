@@ -1,3 +1,14 @@
+terraform {
+  required_version = ">= 1.11.4"
+
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "= 6.14.1"
+    }
+  }
+}
+
 variable "AccessPolicy" {
   type    = string
   default = ""
