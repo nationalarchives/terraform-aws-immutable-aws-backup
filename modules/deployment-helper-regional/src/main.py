@@ -4,9 +4,7 @@ import json
 import logging
 import os
 import shutil
-import subprocess
-from urllib.request import urlretrieve
-from zipfile import ZipFile
+import terraform
 
 LOGGER = logging.getLogger()
 LOGGER.setLevel(logging.INFO)
@@ -89,25 +87,14 @@ def TerraformDeployment(event, context):
         )
         return
     tf_dir = "/tmp/terraform"
-    tf_binary = os.path.join(tf_dir, "terraform")
     work_dir = os.path.join(tf_dir, "work")
+    # Clear the work directory of any previous invocations
     shutil.rmtree(work_dir, ignore_errors=True)
     os.makedirs(work_dir, exist_ok=True)
     os.chdir(work_dir)
     LOGGER.info(f"CWD: {os.getcwd()}")
     # Install Terraform if not already installed
-    if not os.path.exists(tf_binary):
-        LOGGER.info(f'Installing Terraform to "{tf_binary}".')
-        os.makedirs(tf_dir, exist_ok=True)
-        terraform_url = f"https://releases.hashicorp.com/terraform/{TERRAFORM_VERSION}/terraform_{TERRAFORM_VERSION}_linux_amd64.zip"
-        zip_path = os.path.join(tf_dir, "terraform.zip")
-        LOGGER.info(f'Downloading Terraform from "{terraform_url}" to "{zip_path}".')
-        urlretrieve(terraform_url, zip_path)
-        LOGGER.info(f'Extracting Terraform from "{zip_path}" to "{tf_dir}".')
-        with ZipFile(zip_path, "r") as zip_ref:
-            zip_ref.extractall(tf_dir)
-        os.chmod(tf_binary, 0o755)
-        os.remove(zip_path)
+    tf_binary = terraform.install(TERRAFORM_VERSION, tf_dir)
     # Copy stack into work directory
     LOGGER.info(f'Copying Terraform stack into "{work_dir}".')
     tf_src = event["ResourceProperties"]["Code"].replace("./", "/var/task/")
@@ -118,77 +105,41 @@ def TerraformDeployment(event, context):
     LOGGER.info(f'Writing variables to "{variables_file}".')
     with open(variables_file, "w") as f:
         json.dump(tf_vars, f)
-    # Write provider file
-    provider_file = os.path.join(work_dir, "provider.tf")
+    # Write backend file
+    backend_file = os.path.join(work_dir, "_backend.tf")
+    with open(backend_file, "w") as f:
+        f.write("terraform {\n  backend \"s3\" {}\n}\n")
+    # Write provider file with role assumption
+    provider_file = os.path.join(work_dir, "_provider.tf")
     role_arn = event["ResourceProperties"]["RoleArn"]
     with open(provider_file, "w") as f:
-        f.write('provider "aws" {\n')
-        f.write("  assume_role {\n")
-        f.write(f'    role_arn = "{role_arn}"\n')
-        f.write("  }\n")
-        f.write("}\n")
+        f.write('provider "aws" {\n  assume_role {\n    role_arn = "%s"\n  }\n}\n' % role_arn)
     # Determine state S3 bucket region
     LOGGER.info(f'Getting location for state bucket.')
     state_bucket_region = boto3_client("s3").get_bucket_location(Bucket=TERRAFORM_STATE_BUCKET).get("LocationConstraint")
     state_bucket_region = state_bucket_region if state_bucket_region else "us-east-1"
     state_bucket_region = "eu-west-1" if state_bucket_region == "EU" else state_bucket_region
-    # Write backend file
-    backend_file = os.path.join(work_dir, "_backend.tf")
+    # terraform init with backend config
     stack_id_parts = event["StackId"].split(":")
     account_id = stack_id_parts[4]
     region = stack_id_parts[3]
     stack_ref = stack_id_parts[5]
     terraform_state_key = "/".join(event.get("PhysicalResourceId").split("/")[3:]) if event.get("PhysicalResourceId") else f"stackset-deploy/{account_id}/{region}/{stack_ref}/{event['LogicalResourceId']}.tfstate"
     state_object_uri = f"s3://{TERRAFORM_STATE_BUCKET}/{terraform_state_key}"
-    LOGGER.info(f'Using state file "{state_object_uri}".')
-    with open(backend_file, "w") as f:
-        f.write("terraform {\n")
-        f.write('  backend "s3" {\n')
-        f.write(f'    bucket = "{TERRAFORM_STATE_BUCKET}"\n')
-        f.write(f'    key = "{terraform_state_key}"\n')
-        f.write(f'    region = "{state_bucket_region}"\n')
-        f.write("  }\n")
-        f.write("}\n")
-    # terraform init
-    LOGGER.info(f"Initialising Terraform.")
-    try:
-        init_result = subprocess.run(
-            [tf_binary, "init", "-no-color"],
-            capture_output=True,
-            text=True,
-            check=True,
-        )
-        LOGGER.info(init_result.stdout)
-        LOGGER.info(init_result.stderr)
-    except subprocess.CalledProcessError as e:
-        LOGGER.error(f"Terraform init failed: {e.stderr}")
-        raise Exception(f"Terraform init failed: {e.stderr}") from e
-    # terraform apply --auto-approve
-    LOGGER.info(f"Applying Terraform.")
-    try:
-        apply_result = subprocess.run(
-            list(
-                filter(
-                    None,
-                    [
-                        tf_binary,
-                        "apply",
-                        "-no-color",
-                        "-auto-approve",
-                        f"-var-file={variables_file}",
-                        *["-destroy" if event["RequestType"] == "Delete" else None],
-                    ],
-                )
-            ),
-            capture_output=True,
-            text=True,
-            check=True,
-        )
-        LOGGER.info(apply_result.stdout)
-        LOGGER.info(apply_result.stderr)
-    except subprocess.CalledProcessError as e:
-        LOGGER.error(f"Terraform apply failed: {e.stderr}")
-        raise Exception(f"Terraform apply failed: {e.stderr}") from e
+    terraform.init(
+        tf_binary=tf_binary,
+        bucket=TERRAFORM_STATE_BUCKET,
+        key=terraform_state_key,
+        region=state_bucket_region
+    )
+    # terraform apply/destroy
+    is_delete = event["RequestType"] == "Delete"
+    terraform.apply(
+        tf_binary=tf_binary,
+        var_file=variables_file,
+        destroy=is_delete,
+        auto_approve=True
+    )
     shutil.rmtree(work_dir)
     cfnresponse.send(
         event,
