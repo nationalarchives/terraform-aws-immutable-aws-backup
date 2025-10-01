@@ -132,13 +132,19 @@ def TerraformDeployment(event, context):
         key=terraform_state_key,
         region=state_bucket_region
     )
-    # terraform apply/destroy
+    # terraform plan
     is_delete = event["RequestType"] == "Delete"
-    terraform.apply(
+    plan_file = os.path.join(work_dir, "tfplan")
+    terraform.plan(
+        out_file=plan_file,
         tf_binary=tf_binary,
         var_file=variables_file,
-        destroy=is_delete,
-        auto_approve=True
+        destroy=is_delete
+    )
+    # terraform apply using the plan file
+    terraform.apply(
+        tf_binary=tf_binary,
+        plan_file=plan_file
     )
     shutil.rmtree(work_dir)
     cfnresponse.send(
