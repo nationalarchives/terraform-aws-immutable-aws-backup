@@ -17,7 +17,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
       - name: Install TFLint
-        uses: terraform-linters/setup-tflint@ae78205cfffec9e8d93fd2b3115c7e9d3166d4b6 # v5.0.0
+        uses: terraform-linters/setup-tflint@acd1575d3c037258ce5b2dd01379dc49ce24c6b7 # v6.2.0
         with:
           tflint_version: v0.58.1
           checksums: |
