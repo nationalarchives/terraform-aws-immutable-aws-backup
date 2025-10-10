@@ -7,5 +7,7 @@ updates:
   - package-ecosystem: "terraform"
     directories:
       - "**/*"
+    exclude-paths:
+      - "modules/deployment-helper-regional/src/terraform-stacks"
     schedule:
       interval: "weekly"
