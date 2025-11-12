@@ -50,7 +50,7 @@ module "region" {
   ram = {
     create_lag_shares  = local.create_lag_shares
     lag_share_name     = local.lag_share_name
-    target_account_ids = try(flatten(values(data.aws_organizations_organizational_unit_descendant_accounts.target_accounts)[*].accounts[*].id), [])
+    target_account_ids = try([for i in flatten(values(data.aws_organizations_organizational_unit_descendant_accounts.target_accounts)[*].accounts[*]) : i.id if i.state == "ACTIVE"], [])
   }
   stepfunctions = {
     ingest_state_machine_name          = local.ingest_state_machine_name
