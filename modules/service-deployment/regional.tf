@@ -4,6 +4,11 @@ data "aws_organizations_organizational_unit_descendant_accounts" "target_account
   parent_id = each.key
 }
 
+locals {
+  ram_target_accounts    = try(flatten(values(data.aws_organizations_organizational_unit_descendant_accounts.target_accounts)[*].accounts[*]), [])
+  ram_target_account_ids = [for a in local.ram_target_accounts : a.id if a.state == "ACTIVE"]
+}
+
 #
 # Module for deploying AWS Backup resources in a specific region.
 #
@@ -50,7 +55,7 @@ module "region" {
   ram = {
     create_lag_shares  = local.create_lag_shares
     lag_share_name     = local.lag_share_name
-    target_account_ids = try(flatten(values(data.aws_organizations_organizational_unit_descendant_accounts.target_accounts)[*].accounts[*].id), [])
+    target_account_ids = local.ram_target_account_ids
   }
   stepfunctions = {
     ingest_state_machine_name          = local.ingest_state_machine_name
