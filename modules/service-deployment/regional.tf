@@ -6,7 +6,7 @@ data "aws_organizations_organizational_unit_descendant_accounts" "target_account
 
 locals {
   ram_target_accounts    = try(flatten(values(data.aws_organizations_organizational_unit_descendant_accounts.target_accounts)[*].accounts[*]), [])
-  ram_target_account_ids = [for a in local.ram_target_accounts : a.id if a.state == "ACTIVE"]
+  ram_target_account_ids = [for a in local.ram_target_accounts : a.id if try(a.state == "ACTIVE", a.status == "ACTIVE")]
 }
 
 #
