@@ -49,7 +49,7 @@ locals {
     # If using a Logically Air Gapped Vault, we need separate plans for the resource selections
     local.create_lag_resources ? { for k, v in var.plans : "${k}-lag" => merge(v, { lag_plan : true, continuous_plan : false, tag_value : k }) if v["use_logically_air_gapped_vault"] } : {},
     # If creating continuous backups, we need separate plans for the continuous backups - different lifecycle and they need to exist before the rules that snapshot from them.
-    { for k, v in var.plans : "${k}-pitr" => merge(v, { lag_plan : false, continuous_plan : true, tag_value : k, start_backup_window_minutes : null, complete_backup_window_minutes : null, rules : [{ name : "${k}-continuous-backups", schedule_expression : v["continuous_backup_schedule_expression"], delete_after_days : 35, start_backup_window_minutes : null, complete_backup_window_minutes : null }] }) if v["create_continuous_backups"] || v["snapshot_from_continuous_backups"] },
+    { for k, v in var.plans : "${k}-pitr" => merge(v, { lag_plan : false, continuous_plan : true, tag_value : k, start_backup_window_minutes : null, complete_backup_window_minutes : null, rules : [{ name : "${k}-continuous-backups", schedule_expression : v["continuous_backup_schedule_expression"], delete_after_days : 35, start_backup_window_minutes : null, complete_backup_window_minutes : null, recovery_point_tags : merge(var.recovery_point_tags, v["recovery_point_tags"]) }] }) if v["create_continuous_backups"] || v["snapshot_from_continuous_backups"] },
   )
 
   policy_content = jsonencode({
@@ -70,9 +70,14 @@ locals {
               },
               "schedule_expression" : { "@@assign" : rule["schedule_expression"] },
               "start_backup_window_minutes" : { "@@assign" : try(coalesce(rule["start_backup_window_minutes"], plan["start_backup_window_minutes"]), null) },
-              "recovery_point_tags" : plan["continuous_plan"] ? null : merge(
-                { "${local.local_retention_days_tag}" : { "tag_key" : { "@@assign" : local.local_retention_days_tag }, "tag_value" : { "@@assign" : coalesce(rule["local_retention_days"], plan["local_retention_days"], rule["delete_after_days"], -1) } } },
-                plan["lag_plan"] ? {} : { "${local.intermediate_retention_days_tag}" : { "tag_key" : { "@@assign" : local.intermediate_retention_days_tag }, "tag_value" : { "@@assign" : coalesce(rule["intermediate_retention_days"], plan["intermediate_retention_days"], 7) } } }
+              "recovery_point_tags" : merge(
+                { for k, v in var.recovery_point_tags : k => { "tag_key" : { "@@assign" : k }, "tag_value" : { "@@assign" : v } } },
+                { for k, v in plan["recovery_point_tags"] : k => { "tag_key" : { "@@assign" : k }, "tag_value" : { "@@assign" : v } } },
+                { for k, v in rule["recovery_point_tags"] : k => { "tag_key" : { "@@assign" : k }, "tag_value" : { "@@assign" : v } } },
+                plan["continuous_plan"] ? null : merge(
+                  { "${local.local_retention_days_tag}" : { "tag_key" : { "@@assign" : local.local_retention_days_tag }, "tag_value" : { "@@assign" : coalesce(rule["local_retention_days"], plan["local_retention_days"], rule["delete_after_days"], -1) } } },
+                  plan["lag_plan"] ? {} : { "${local.intermediate_retention_days_tag}" : { "tag_key" : { "@@assign" : local.intermediate_retention_days_tag }, "tag_value" : { "@@assign" : coalesce(rule["intermediate_retention_days"], plan["intermediate_retention_days"], 7) } } }
+                )
               )
               "target_backup_vault_name" : { "@@assign" : local.member_account_backup_vault_name }
             } : k => v if(v != null && try(v["@@assign"], true) != null) }

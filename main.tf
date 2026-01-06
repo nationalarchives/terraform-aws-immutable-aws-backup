@@ -30,15 +30,16 @@ module "deployment" {
   source   = "./modules/service-deployment"
   for_each = var.deployments
 
-  service_name       = each.key
-  admin_role_names   = each.value.admin_role_names
-  backup_tag_key     = each.value.backup_tag_key
-  deployment_targets = each.value.backup_targets
-  max_retention_days = each.value.max_retention_days
-  min_retention_days = each.value.min_retention_days
-  plans              = each.value.plans
-  restores_enabled   = each.value.allow_backup_targets_to_restore
-  retained_vaults    = each.value.retained_vaults
+  service_name        = each.key
+  admin_role_names    = each.value.admin_role_names
+  backup_tag_key      = each.value.backup_tag_key
+  deployment_targets  = each.value.backup_targets
+  max_retention_days  = each.value.max_retention_days
+  min_retention_days  = each.value.min_retention_days
+  plans               = each.value.plans
+  recovery_point_tags = each.value.recovery_point_tags
+  restores_enabled    = each.value.allow_backup_targets_to_restore
+  retained_vaults     = each.value.retained_vaults
 
   current = {
     account_id                         = local.account_id

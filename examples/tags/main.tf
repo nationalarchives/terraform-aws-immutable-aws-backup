@@ -13,6 +13,11 @@ module "aws_backup" {
       allow_backup_targets_to_restore = true
       backup_tag_key                  = "BackupPolicy"
       plans                           = local.ca_default_plans
+
+      # Tag the backups with the deployment that created them
+      recovery_point_tags = {
+        "BackupDeployment" : "ca-prod"
+      }
     }
   }
 }

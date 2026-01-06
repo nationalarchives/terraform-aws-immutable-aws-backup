@@ -17,6 +17,7 @@ variable "deployments" {
       create_continuous_backups             = optional(bool, false)                 # Create continuous backups for resources that support it to enable local PITR, there is no copy action for these backups.
       intermediate_retention_days           = optional(number)                      # Number of days to retain backups in the intermediate vault.
       local_retention_days                  = optional(number)                      # Number of days to retain backups in the member account vault. If not specified, defaults to delete_after_days.
+      recovery_point_tags                   = optional(map(string))
       require_plan_name_resource_tag        = optional(bool, true)
       snapshot_from_continuous_backups      = optional(bool, true) # Generate continuous backups for resources that support it and then snapshot from them. These backups do not copy but act as a source for the backup jobs created by the rules. Currently only S3 is supported.
       start_backup_window_minutes           = optional(number)
@@ -27,10 +28,12 @@ variable "deployments" {
         intermediate_retention_days    = optional(number) # Number of days to retain backups in the intermediate vault, overrides the plan's intermediate_retention_days.
         local_retention_days           = optional(number) # Number of days to retain backups in the member account vault. If not specified, defaults to delete_after_days.
         name                           = optional(string)
+        recovery_point_tags            = optional(map(string))
         schedule_expression            = string
         start_backup_window_minutes    = optional(number)
       }))
     }))
+    recovery_point_tags = optional(map(string))
     retained_vaults = optional(list(object({
       min_retention_days             = number
       max_retention_days             = number
