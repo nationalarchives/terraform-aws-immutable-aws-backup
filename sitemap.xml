@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    <url>
+         <loc>https://nationalarchives.github.io/terraform-aws-immutable-aws-backup/</loc>
+         <lastmod>2026-01-12</lastmod>
+    </url>
+    <url>
+         <loc>https://nationalarchives.github.io/terraform-aws-immutable-aws-backup/architecture/</loc>
+         <lastmod>2026-01-12</lastmod>
+    </url>
+    <url>
+         <loc>https://nationalarchives.github.io/terraform-aws-immutable-aws-backup/usage-backing-up-your-resources/</loc>
+         <lastmod>2026-01-12</lastmod>
+    </url>
+    <url>
+         <loc>https://nationalarchives.github.io/terraform-aws-immutable-aws-backup/usage-configuration/</loc>
+         <lastmod>2026-01-12</lastmod>
+    </url>
+    <url>
+         <loc>https://nationalarchives.github.io/terraform-aws-immutable-aws-backup/usage-prerequisites/</loc>
+         <lastmod>2026-01-12</lastmod>
+    </url>
+    <url>
+         <loc>https://nationalarchives.github.io/terraform-aws-immutable-aws-backup/usage-restoring-your-backups/</loc>
+         <lastmod>2026-01-12</lastmod>
+    </url>
+    <url>
+         <loc>https://nationalarchives.github.io/terraform-aws-immutable-aws-backup/why-use-this-module/</loc>
+         <lastmod>2026-01-12</lastmod>
+    </url>
+</urlset>
