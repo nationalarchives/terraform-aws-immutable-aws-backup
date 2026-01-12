@@ -8,6 +8,7 @@ The module is designed to be deployed into a delegated administrator account wit
 - Trusted access [with AWS Backup](https://docs.aws.amazon.com/organizations/latest/userguide/services-that-can-integrate-backup.html#integrate-enable-ta-backup) and [Resource Access Manager (RAM)](https://docs.aws.amazon.com/organizations/latest/userguide/services-that-can-integrate-ram.html#integrate-enable-ta-ram) is enabled on your Organization.
 - [Backup Policies](https://docs.aws.amazon.com/organizations/latest/userguide/enable-policy-type.html) are enabled within your Organization.
 - [Enable cross-account backup](https://docs.aws.amazon.com/aws-backup/latest/devguide/create-cross-account-backup.html#prereq-cab) is turned on within your Organization.
+- Create a Backup Service-linked role by [enabling the Delegated Administrator feature](https://docs.aws.amazon.com/aws-backup/latest/devguide/manage-cross-account.html#backup-delegatedadmin) in your Organization management account.
 - [AWS Backup cross-account monitoring](https://docs.aws.amazon.com/aws-backup/latest/devguide/manage-cross-account.html#enable-cross-account) is enabled within your Organization.
 - The account you are deploying to has been [delegated to manage AWS Backup](https://docs.aws.amazon.com/aws-backup/latest/devguide/manage-cross-account.html#backup-delegatedadmin).
 - The account you are deploying to has been [delegated to manage CloudFormation StackSets](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/stacksets-orgs-delegated-admin.html).
