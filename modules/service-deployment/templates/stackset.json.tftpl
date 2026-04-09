@@ -279,7 +279,27 @@ ${jsonencode({
             }
           ]
         },
-        "ManagedPolicyArns": ["arn:aws:iam::aws:policy/AdministratorAccess"]
+        "Policies": [
+          {
+            "PolicyName": { "Fn::Sub": "$${DeploymentHelperRoleNamePrefix}$${AWS::Region}" },
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": "iam:CreateServiceLinkedRole",
+                  "Resource": "*",
+                  "Condition": {
+                    "StringEquals": {
+                      "iam:AWSServiceName": "backup.amazonaws.com"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        ],
+        "ManagedPolicyArns": ["arn:aws:iam::aws:policy/PowerUserAccess"]
       }
     },
     "EventBridgeRole": {
