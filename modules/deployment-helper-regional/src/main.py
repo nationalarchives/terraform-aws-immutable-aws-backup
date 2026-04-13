@@ -1,5 +1,6 @@
 import boto3
 import cfnresponse
+import hashlib
 import json
 import logging
 import os
@@ -15,6 +16,7 @@ LAMBDA_FUNCTION_ARN = None
 
 TERRAFORM_STATE_BUCKET = os.getenv("TERRAFORM_STATE_BUCKET")
 TERRAFORM_VERSION = "1.11.4"
+TERRAFORM_SHA256 = "1ce994251c00281d6845f0f268637ba50c0005657eb3cf096b92f753b42ef4dc"
 
 
 def boto3_client(service, role_arn=None):
@@ -103,6 +105,17 @@ def TerraformDeployment(event, context):
         zip_path = os.path.join(tf_dir, "terraform.zip")
         LOGGER.info(f'Downloading Terraform from "{terraform_url}" to "{zip_path}".')
         urlretrieve(terraform_url, zip_path)
+        sha256_hash = hashlib.sha256()
+        with open(zip_path, "rb") as f:
+            for chunk in iter(lambda: f.read(8192), b""):
+                sha256_hash.update(chunk)
+        actual_sha256 = sha256_hash.hexdigest()
+        if actual_sha256 != TERRAFORM_SHA256:
+            os.remove(zip_path)
+            raise Exception(
+                f"Terraform binary checksum mismatch: expected {TERRAFORM_SHA256}, got {actual_sha256}"
+            )
+        LOGGER.info("Terraform binary checksum verified.")
         LOGGER.info(f'Extracting Terraform from "{zip_path}" to "{tf_dir}".')
         with ZipFile(zip_path, "r") as zip_ref:
             zip_ref.extractall(tf_dir)
