@@ -1,0 +1,8 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "github>nationalarchives/renovate-config",
+    "github>nationalarchives/renovate-config:github-actions",
+    "github>nationalarchives/renovate-config:python-packages"
+  ]
+}
