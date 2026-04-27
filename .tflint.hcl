@@ -1,7 +1,7 @@
 plugin "aws" {
   enabled = true
   source  = "github.com/terraform-linters/tflint-ruleset-aws"
-  version = "0.40.0"
+  version = "0.47.0"
 }
 
 rule "aws_iam_policy_document_gov_friendly_arns" {
