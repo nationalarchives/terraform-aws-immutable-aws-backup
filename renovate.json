@@ -10,6 +10,11 @@
       "matchManagers": ["terraform"],
       "matchPackageNames": ["hashicorp/aws"],
       "enabled": false
+    },
+    {
+      "matchPackageNames": ["terraform-linters/tflint-ruleset-aws"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "automerge": true
     }
   ]
 }
