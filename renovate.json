@@ -4,5 +4,12 @@
     "github>nationalarchives/renovate-config",
     "github>nationalarchives/renovate-config:github-actions",
     "github>nationalarchives/renovate-config:python-packages"
+  ],
+  "packageRules": [
+    {
+      "matchManagers": ["terraform"],
+      "matchPackageNames": ["hashicorp/aws"],
+      "enabled": false
+    }
   ]
 }
