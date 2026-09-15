@@ -30,7 +30,7 @@ jobs:
       - name: Install Terraform
         uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
         with:
-          terraform_version: 1.9.0
+          terraform_version: 1.16.1
       - run: terraform fmt -check=true -recursive
       - run: terraform init -backend=false
       - run: terraform validate
