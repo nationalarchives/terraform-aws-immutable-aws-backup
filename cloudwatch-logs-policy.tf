@@ -1,7 +1,7 @@
 # CloudWatch Logs allows a maximum of 10 resource policies per region per account, so a single policy
 # covering the event bus log groups of all deployments is created per region instead of one per deployment.
 resource "aws_cloudwatch_log_resource_policy" "event_bus_logs" {
-  for_each = toset(local.deployment_regions)
+  for_each = length(var.deployments) > 0 ? toset(local.deployment_regions) : toset([])
 
   region      = each.value
   policy_name = "${var.central_account_resource_name_prefix}event-bus-to-cloudwatch"
