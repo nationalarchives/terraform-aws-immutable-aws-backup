@@ -42,29 +42,8 @@ resource "aws_cloudwatch_log_group" "event_bus" {
   retention_in_days = 90
 }
 
-resource "aws_cloudwatch_log_resource_policy" "policy" {
-  region      = var.region
-  policy_name = "${aws_cloudwatch_event_bus.event_bus.name}-event_bus_to_cloudwatch"
-  policy_document = jsonencode({
-    "Version" : "2012-10-17",
-    "Statement" : [
-      {
-        "Principal" : {
-          "Service" : [
-            "events.amazonaws.com",
-            "delivery.logs.amazonaws.com"
-          ]
-        },
-        "Effect" : "Allow",
-        "Action" : [
-          "logs:CreateLogStream",
-          "logs:PutLogEvents"
-        ],
-        "Resource" : "${aws_cloudwatch_log_group.event_bus.arn}:*"
-      }
-    ],
-  })
-}
+# The CloudWatch Logs resource policy allowing EventBridge to write to this log group is
+# created once per region in the root module, as the per-region limit is 10 policies.
 resource "aws_cloudwatch_event_rule" "event_bus_to_cloudwatch" {
   region         = var.region
   name           = "log-to-cloudwatch"

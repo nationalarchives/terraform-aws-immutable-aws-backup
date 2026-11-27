@@ -21,7 +21,7 @@ jobs:
         with:
           tflint_version: v0.66.0
           checksums: |
-            2fea1af8e8602d4d9e4253a588ac66f17bf36152cafb51f4d929b8bc6335e740
+            22be11cadc25cd02401e94c0ccc91aa63467debb8485c2a755d98f4c0a9d1e2e
       - name: tflint --init
         env:
           GITHUB_TOKEN: ${{ github.token }}
